@@ -121,7 +121,7 @@ npm install
 cp env.example .env
 ```
 
-Edit `.env` if your backend is not at `http://localhost:5000`.
+Edit `.env` and set `NEXT_PUBLIC_URL_BACKEND_API` to your backend URL if it is not `http://localhost:5000`.
 
 ```bash
 # Development
