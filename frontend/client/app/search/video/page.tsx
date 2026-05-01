@@ -9,7 +9,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const searchParams = await props.searchParams;
   const query = (searchParams.q as string) || "";
   return {
-    title: query ? `${query} - Pyxis Videos` : "Pyxis Videos",
+    title: query ? `${query} - Videos` : "Video Search",
   };
 }
 

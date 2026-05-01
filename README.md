@@ -2,13 +2,13 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-**Pyxis** is an open-source, privacy-respecting search engine developed by **PyxLab**. It provides fast, relevant results across text, images, videos, news, and books by aggregating data from DuckDuckGo and enriching it with instant answers and autocomplete suggestions. The project consists of a **Next.js frontend** (App Router) and a **Flask backend** with Redis caching, designed for easy self-hosting on Linux servers.
+**Pyxis** is an open-source, privacy-respecting search engine developed by **PyxLab**. It provides fast, relevant results across text, images, videos, news, and books by aggregating data from multiple search engines with automatic backend selection, enriched with instant answers and autocomplete suggestions. The project consists of a **Next.js frontend** (App Router) and a **Flask backend** with Redis caching, designed for easy self-hosting on Linux servers.
 
 ---
 
 ## Features
 
-- **Multi-type search** – Text, images, videos, news, and books via DuckDuckGo (`ddgs` library).
+- **Multi-type search** – Text, images, videos, news, and books via `ddgs` (DDGS | Dux Distributed Global Search), a metasearch library that aggregates results from diverse web search services. Backends vary by type: text uses Bing, Brave, DuckDuckGo, Google, Grokipedia, Mojeek, Yandex, Yahoo, or Wikipedia; images use Bing or DuckDuckGo; news uses Bing, DuckDuckGo, or Yahoo; books use Anna's Archive.
 - **Instant answers** – Concise factual answers with an optional related image (Wikipedia/Wikimedia Commons).
 - **Autocomplete** – Real-time query suggestions from a local CSV-based engine using English word frequency data.
 - **Content filtering** – Blocked domains and keywords loaded from CSV files; safe-image extension enforcement.
@@ -24,7 +24,7 @@
 ![Pyxis architecture diagram](doc/figure/Pyxis_Architecture.jpg)
 
 - **Frontend** – Next.js App Router application. API calls are proxied to the backend via Next.js rewrites (`/api/*` → `http://localhost:5000`).
-- **Backend** – Flask REST API. Fetches from DuckDuckGo, applies content filters, and caches responses in Redis.
+- **Backend** – Flask REST API. Fetches from multiple search engines via `ddgs`, applies content filters, and caches responses in Redis.
 - **Redis** – Optional in development, recommended in production.
 
 ---
@@ -96,7 +96,7 @@ redis-cli ping   # should return PONG
 
 ```bash
 cp env.example .env
-# Edit .env — at minimum check REDIS_URL
+# Edit .env -- at minimum check REDIS_URL
 ```
 
 **Prepare datasets** – place CSV files in `autocomplete/dataset/` and `filters/` (see [backend README](backend/python/README.md)).
@@ -235,7 +235,7 @@ GET /instant?q=elon+musk
 
 Pyxis relies on these open-source projects:
 
-- **[ddgs](https://github.com/deedy5/ddgs)** – DuckDuckGo Search Python library. MIT License. Copyright (c) 2024 deedy5.
+- **[ddgs](https://github.com/deedy5/ddgs)** – DDGS | Dux Distributed Global Search. A metasearch library that aggregates results from diverse web search services. MIT License. Copyright (c) 2024 deedy5.
 - **English Word Frequency Dataset** – derived from the [Google Web Trillion Word Corpus](https://catalog.ldc.upenn.edu/LDC2006T13) (Thorsten Brants and Alex Franz), processed by Peter Norvig ([norvig.com/ngrams](https://norvig.com/ngrams/)). Used for autocomplete ranking.
 
 ---

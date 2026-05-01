@@ -124,6 +124,12 @@ app/
 ├── signin/
 │   ├── page.tsx
 │   └── signinwrapper.tsx
+├── about/
+│   └── page.tsx
+├── privacy/
+│   └── page.tsx
+├── terms/
+│   └── page.tsx
 ├── globals.css
 ├── layout.tsx
 ├── page.tsx                    # Homepage
