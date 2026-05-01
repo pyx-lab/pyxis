@@ -1,0 +1,9 @@
+ddgs
+flask
+flask-caching
+flask-cors
+python-dotenv
+waitress
+requests
+redis
+tldextract
