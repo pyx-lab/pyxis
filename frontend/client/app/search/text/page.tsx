@@ -10,7 +10,9 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const query = searchParams.q;
   return {
     title:
-      typeof query === "string" ? `${query} - Pyxis Search` : "Pyxis Search",
+      typeof query === "string" && query
+        ? `${query} - Web Search`
+        : "Web Search",
   };
 }
 

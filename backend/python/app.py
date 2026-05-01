@@ -27,7 +27,7 @@ SAFE_SEARCH = "on"
 
 _FILTER_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "filters")
 _KEYWORDS_CSV = os.path.join(_FILTER_DIR, "blocked_keywords.csv")
-_DOMAINS_CSV  = os.path.join(_FILTER_DIR, "blocked_domains.csv")
+_DOMAINS_CSV = os.path.join(_FILTER_DIR, "blocked_domains.csv")
 
 
 def _load_csv_set(path: str) -> set[str]:
@@ -50,7 +50,7 @@ def _load_csv_set(path: str) -> set[str]:
 
 
 BLOCKED_QUERY_KEYWORDS: set[str] = _load_csv_set(_KEYWORDS_CSV)
-BLOCKED_DOMAINS: set[str]        = _load_csv_set(_DOMAINS_CSV)
+BLOCKED_DOMAINS: set[str] = _load_csv_set(_DOMAINS_CSV)
 
 
 def is_query_blocked(query: str) -> bool:
@@ -97,15 +97,18 @@ def filter_results(results: list[dict]) -> list[dict]:
     return [r for r in results if _result_is_clean(r)]
 
 
-cache = Cache(config={
-    'CACHE_TYPE': 'RedisCache',
-    'CACHE_REDIS_URL': os.environ.get('REDIS_URL', 'redis://localhost:6379/0'),
-    'CACHE_DEFAULT_TIMEOUT': 300,
-    'CACHE_KEY_PREFIX': 'pyxis_'
-})
+cache = Cache(
+    config={
+        "CACHE_TYPE": "RedisCache",
+        "CACHE_REDIS_URL": os.environ.get("REDIS_URL", "redis://localhost:6379/0"),
+        "CACHE_DEFAULT_TIMEOUT": 300,
+        "CACHE_KEY_PREFIX": "pyxis_",
+    }
+)
 
 try:
     from autocomplete.autocomplete import Autocomplete
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     autocomplete_data_dir = os.path.join(current_dir, "autocomplete", "dataset")
     autocomplete = Autocomplete(
@@ -120,8 +123,10 @@ except Exception as e:
 
 try:
     import sys
+
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     from instantsearch.instantsearch import InstantAnswerClient
+
     INSTANT_ANSWER_AVAILABLE = True
 except Exception as e:
     print(f"Instant answer client import failed: {e}")
@@ -133,7 +138,9 @@ app.json.ensure_ascii = False
 cache.init_app(app)
 
 MAX_RETRIES = int(os.environ.get("MAX_RETRIES", 5))
-RETRY_DELAYS = [float(x) for x in os.environ.get("RETRY_DELAYS", "0.1,0.2,0.4,0.8").split(",")]
+RETRY_DELAYS = [
+    float(x) for x in os.environ.get("RETRY_DELAYS", "0.1,0.2,0.4,0.8").split(",")
+]
 
 TEXT_MAX_RESULTS_PER_PAGE = int(os.environ.get("TEXT_MAX_RESULTS_PER_PAGE", 10))
 TEXT_MAX_PAGES = int(os.environ.get("TEXT_MAX_PAGES", 10))
@@ -166,16 +173,16 @@ def ddgs_with_retry(fn):
             return fn(DDGS())
         except Exception as e:
             last_exc = e
-            print(f"[DDGS] attempt {attempt + 1}/{MAX_RETRIES}: {type(e).__name__}: {e}")
+            print(
+                f"[DDGS] attempt {attempt + 1}/{MAX_RETRIES}: {type(e).__name__}: {e}"
+            )
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAYS[attempt])
     raise last_exc
 
 
 def make_cache_key(*args, **kwargs):
-    params = sorted(
-        (k, v) for k, v in request.args.items() if k != "safesearch"
-    )
+    params = sorted((k, v) for k, v in request.args.items() if k != "safesearch")
     sorted_qs = urllib.parse.urlencode(params)
     return f"{request.path}?{sorted_qs}"
 
@@ -198,7 +205,11 @@ def autocomplete_suggestions():
         max_results = request.args.get("max_results", 10, type=int)
         query = urllib.parse.unquote(raw_query)
         suggestions = autocomplete.generate_suggestions(query, max_results=max_results)
-        response_data = {"query": query, "suggestions": suggestions, "count": len(suggestions)}
+        response_data = {
+            "query": query,
+            "suggestions": suggestions,
+            "count": len(suggestions),
+        }
         cache.set(cache_key, response_data, timeout=CACHE_TIMEOUT_AUTOCOMPLETE)
         return jsonify(response_data)
     except Exception as e:
@@ -219,14 +230,16 @@ def search():
     keywords = urllib.parse.unquote(raw_keywords)
 
     if is_query_blocked(keywords):
-        return jsonify({
-            "search_type": request.args.get("type", "text").lower(),
-            "query": keywords,
-            "page": request.args.get("page", 1, type=int),
-            "has_more": False,
-            "count": 0,
-            "results": [],
-        })
+        return jsonify(
+            {
+                "search_type": request.args.get("type", "text").lower(),
+                "query": keywords,
+                "page": request.args.get("page", 1, type=int),
+                "has_more": False,
+                "count": 0,
+                "results": [],
+            }
+        )
 
     search_type = request.args.get("type", "text").lower()
 
@@ -238,7 +251,7 @@ def search():
         "images": "auto",
         "videos": "auto",
         "news": "auto",
-        "books": "openlibrary",
+        "books": "auto",
     }
     backend = backend_map.get(search_type, "duckduckgo")
 
@@ -252,17 +265,25 @@ def search():
         if max_results is None:
             max_results = TEXT_MAX_RESULTS_PER_PAGE
         try:
-            raw_results = list(ddgs_with_retry(lambda d: d.text(
-                keywords,
-                region="us-en",
-                safesearch=SAFE_SEARCH,
-                timelimit=None,
-                max_results=max_results,
-                page=page,
-                backend=backend,
-            )))
+            raw_results = list(
+                ddgs_with_retry(
+                    lambda d: d.text(
+                        keywords,
+                        region="us-en",
+                        safesearch=SAFE_SEARCH,
+                        timelimit=None,
+                        max_results=max_results,
+                        page=page,
+                        backend=backend,
+                    )
+                )
+            )
             safe_results = filter_results(raw_results)
-            has_more = (len(raw_results) == max_results) and (page < TEXT_MAX_PAGES) and (len(safe_results) > 0)
+            has_more = (
+                (len(raw_results) == max_results)
+                and (page < TEXT_MAX_PAGES)
+                and (len(safe_results) > 0)
+            )
             response_data = {
                 "search_type": search_type,
                 "query": keywords,
@@ -274,52 +295,66 @@ def search():
             cache.set(cache_key, response_data, timeout=CACHE_TIMEOUT_TEXT)
             return jsonify(response_data)
         except Exception as e:
-            print(f"[SEARCH] all retries exhausted — '{keywords}' (text, page {page}): {type(e).__name__}: {e}")
+            print(
+                f"[SEARCH] all retries exhausted — '{keywords}' (text, page {page}): {type(e).__name__}: {e}"
+            )
             return jsonify({"error": str(e)}), 500
 
     try:
         if search_type == "images":
             if max_results is None:
                 max_results = IMAGE_MAX_RESULTS_PER_PAGE
-            results = list(ddgs_with_retry(lambda d: d.images(
-                keywords,
-                region="us-en",
-                safesearch=SAFE_SEARCH,
-                timelimit=None,
-                max_results=max_results,
-                page=page,
-                backend=backend,
-            )))
+            results = list(
+                ddgs_with_retry(
+                    lambda d: d.images(
+                        keywords,
+                        region="us-en",
+                        safesearch=SAFE_SEARCH,
+                        timelimit=None,
+                        max_results=max_results,
+                        page=page,
+                        backend=backend,
+                    )
+                )
+            )
             has_more = len(results) == max_results and page < IMAGE_MAX_PAGES
             timeout = CACHE_TIMEOUT_IMAGE
 
         elif search_type == "videos":
             if max_results is None:
                 max_results = VIDEO_MAX_RESULTS_PER_PAGE
-            results = list(ddgs_with_retry(lambda d: d.videos(
-                keywords,
-                region="us-en",
-                safesearch=SAFE_SEARCH,
-                timelimit=None,
-                max_results=max_results,
-                page=page,
-                backend=backend,
-            )))
+            results = list(
+                ddgs_with_retry(
+                    lambda d: d.videos(
+                        keywords,
+                        region="us-en",
+                        safesearch=SAFE_SEARCH,
+                        timelimit=None,
+                        max_results=max_results,
+                        page=page,
+                        backend=backend,
+                    )
+                )
+            )
             has_more = len(results) == max_results and page < VIDEO_MAX_PAGES
             timeout = CACHE_TIMEOUT_VIDEO
 
         elif search_type == "news":
             if max_results is None:
                 max_results = NEWS_MAX_RESULTS_PER_PAGE
-            results = list(ddgs_with_retry(lambda d: d.news(
-                keywords,
-                region="us-en",
-                safesearch=SAFE_SEARCH,
-                timelimit=None,
-                max_results=max_results,
-                page=page,
-                backend=backend,
-            )))
+            results = list(
+                ddgs_with_retry(
+                    lambda d: d.news(
+                        keywords,
+                        region="us-en",
+                        safesearch=SAFE_SEARCH,
+                        timelimit=None,
+                        max_results=max_results,
+                        page=page,
+                        backend=backend,
+                    )
+                )
+            )
             has_more = len(results) == max_results and page < NEWS_MAX_PAGES
             timeout = CACHE_TIMEOUT_NEWS
 
@@ -330,26 +365,38 @@ def search():
             open_library_url = f"https://openlibrary.org/search.json?q={urllib.parse.quote(keywords)}&limit={max_results}&page={page}"
 
             try:
-                resp = requests.get(open_library_url, headers={"User-Agent": "PyxisSearchEngine/1.0"}, timeout=10)
+                resp = requests.get(
+                    open_library_url,
+                    headers={"User-Agent": "PyxisSearchEngine/1.0"},
+                    timeout=10,
+                )
                 resp.raise_for_status()
                 data = resp.json()
 
                 results = []
                 for item in data.get("docs", []):
                     cover_id = item.get("cover_i")
-                    image = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg" if cover_id else None
+                    image = (
+                        f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
+                        if cover_id
+                        else None
+                    )
                     authors = item.get("author_name", [])
                     book_key = item.get("key", "")
                     year = item.get("first_publish_year")
 
-                    results.append({
-                        "title": item.get("title", "Untitled"),
-                        "author": ", ".join(authors) if authors else "Unknown",
-                        "url": f"https://openlibrary.org{book_key}" if book_key else "",
-                        "image": image,
-                        "description": "",
-                        "year": str(year) if year else "",
-                    })
+                    results.append(
+                        {
+                            "title": item.get("title", "Untitled"),
+                            "author": ", ".join(authors) if authors else "Unknown",
+                            "url": (
+                                f"https://openlibrary.org{book_key}" if book_key else ""
+                            ),
+                            "image": image,
+                            "description": "",
+                            "year": str(year) if year else "",
+                        }
+                    )
 
                 total_found = data.get("numFound", 0)
                 has_more = total_found > (page * max_results) and page < BOOKS_MAX_PAGES
@@ -373,7 +420,9 @@ def search():
         cache.set(cache_key, response_data, timeout=timeout)
         return jsonify(response_data)
     except Exception as e:
-        print(f"[SEARCH] all retries exhausted — '{keywords}' ({search_type}): {type(e).__name__}: {e}")
+        print(
+            f"[SEARCH] all retries exhausted — '{keywords}' ({search_type}): {type(e).__name__}: {e}"
+        )
         return jsonify({"error": str(e)}), 500
 
 
@@ -405,31 +454,37 @@ def instant_answer():
 @app.route("/help", methods=["GET"])
 def help():
     base_url = request.host_url.rstrip("/")
-    return jsonify({
-        "api": "Pyxis Search API",
-        "version": "1.0",
-        "endpoints": {
-            "/search": "q, type (text|images|videos|news|books), page, max_results (filters ignored; safesearch always on)",
-            "/autocomplete": "q, max_results",
-            "/instant": "q",
-        },
-        "examples": {
-            "text": f"{base_url}/search?q=python&type=text&page=1",
-            "images": f"{base_url}/search?q=cats&type=images&max_results=20&page=1",
-            "videos": f"{base_url}/search?q=tutorial&type=videos&max_results=20&page=1",
-            "news": f"{base_url}/search?q=technology&type=news&max_results=10&page=1",
-            "books": f"{base_url}/search?q=science+fiction&type=books&max_results=10&page=1",
-            "autocomplete": f"{base_url}/autocomplete?q=how+to",
-            "instant": f"{base_url}/instant?q=elon+musk",
-        },
-        "policy": {
-            "safesearch": "always on – adult content is filtered for all search types",
-        },
-        "status": {
-            "autocomplete": "available" if AUTOCOMPLETE_AVAILABLE else "unavailable",
-            "instant_answer": "available" if INSTANT_ANSWER_AVAILABLE else "unavailable",
-        },
-    })
+    return jsonify(
+        {
+            "api": "Pyxis Search API",
+            "version": "1.0",
+            "endpoints": {
+                "/search": "q, type (text|images|videos|news|books), page, max_results (filters ignored; safesearch always on)",
+                "/autocomplete": "q, max_results",
+                "/instant": "q",
+            },
+            "examples": {
+                "text": f"{base_url}/search?q=python&type=text&page=1",
+                "images": f"{base_url}/search?q=cats&type=images&max_results=20&page=1",
+                "videos": f"{base_url}/search?q=tutorial&type=videos&max_results=20&page=1",
+                "news": f"{base_url}/search?q=technology&type=news&max_results=10&page=1",
+                "books": f"{base_url}/search?q=science+fiction&type=books&max_results=10&page=1",
+                "autocomplete": f"{base_url}/autocomplete?q=how+to",
+                "instant": f"{base_url}/instant?q=elon+musk",
+            },
+            "policy": {
+                "safesearch": "always on – adult content is filtered for all search types",
+            },
+            "status": {
+                "autocomplete": (
+                    "available" if AUTOCOMPLETE_AVAILABLE else "unavailable"
+                ),
+                "instant_answer": (
+                    "available" if INSTANT_ANSWER_AVAILABLE else "unavailable"
+                ),
+            },
+        }
+    )
 
 
 @app.route("/", methods=["GET"])
