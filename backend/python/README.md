@@ -1,12 +1,21 @@
 # Pyxis Search Engine – Backend
 
-Flask-based REST API that powers Pyxis. Fetches search results from DuckDuckGo, provides autocomplete suggestions and instant answers, and caches responses in Redis.
+Flask-based REST API that powers Pyxis. Fetches search results from multiple search engines via automatic backend selection, provides autocomplete suggestions and instant answers, and caches responses in Redis.
 
 ## Features
 
-- **Search endpoints** – text, images, videos, news, and books (via `ddgs`)
+- **Search endpoints** – text, images, videos, news, and books via `ddgs` (DDGS | Dux Distributed Global Search), a metasearch library that aggregates results from diverse web search services with automatic backend selection per search type:
+
+  | Type   | Available backends |
+  |--------|--------------------|
+  | text   | Bing, Brave, DuckDuckGo, Google, Grokipedia, Mojeek, Yandex, Yahoo, Wikipedia |
+  | images | Bing, DuckDuckGo |
+  | videos | DuckDuckGo |
+  | news   | Bing, DuckDuckGo, Yahoo |
+  | books  | Anna's Archive |
+
 - **Autocomplete** – local CSV-based suggestion engine with English word frequency ranking
-- **Instant answers** – concise factual answers with an optional related image (DuckDuckGo + Wikipedia/Wikimedia Commons)
+- **Instant answers** – concise factual answers with an optional related image (Wikipedia/Wikimedia Commons)
 - **Content filtering** – blocked domains and blocked keywords loaded from CSV files at startup; safe image extensions enforced on instant search
 - **Redis caching** – per-type TTLs reduce latency and external API calls
 - **PM2 process management** – for production deployments
@@ -50,7 +59,7 @@ pip install -r requirements.txt
 
 ### 4. Keep dependencies up to date
 
-The `ddgs` library scrapes DuckDuckGo and **must be kept up to date** — outdated versions will silently return empty results or break entirely when DuckDuckGo changes its internals.
+The `ddgs` library (Dux Distributed Global Search) interfaces with multiple search backends and **must be kept up to date** -- outdated versions may silently return empty results or break when upstream engines change their internals.
 
 Install `pip-review` to manage updates:
 
@@ -80,7 +89,7 @@ sudo systemctl enable --now redis-server
 redis-cli ping   # should return PONG
 ```
 
-### 5. Configure environment variables
+### 6. Configure environment variables
 
 ```bash
 cp env.example .env
@@ -88,7 +97,7 @@ cp env.example .env
 
 Edit `.env` as needed. All variables have sensible defaults; at minimum check `REDIS_URL`.
 
-### 6. Prepare datasets
+### 7. Prepare datasets
 
 **Autocomplete** – place three CSV files in `autocomplete/dataset/`:
 
@@ -233,9 +242,23 @@ python/
 
 All search results, autocomplete suggestions, and instant answers are cached in Redis. Use these commands to clear cached data when needed.
 
-### Flush everything
+> **Important:** `redis-cli` connects to `localhost:6379 DB 0` by default. If your `REDIS_URL` in `.env` points elsewhere, commands will flush the wrong instance and appear to do nothing. Always verify first:
+> ```bash
+> redis-cli --scan --pattern "pyxis_*" | head -5
+> ```
+> If that returns no keys, pass your actual Redis URL explicitly: `redis-cli -u "$REDIS_URL" ...`
 
-Removes all keys from all Redis databases. Use this after updating filter lists or to force completely fresh results.
+### Flush all Pyxis cache at once (recommended)
+
+Deletes only Pyxis keys, leaving any other data on the same Redis instance untouched.
+
+```bash
+redis-cli --scan --pattern "pyxis_*" | xargs redis-cli del
+```
+
+### Flush everything in Redis
+
+Removes all keys from all databases on the instance. Use with caution if Redis is shared.
 
 ```bash
 redis-cli flushall
@@ -243,7 +266,7 @@ redis-cli flushall
 
 ### Flush only the Pyxis database
 
-If `REDIS_URL` uses a specific database number (e.g. `redis://localhost:6379/0` uses DB 0), you can flush just that database without affecting anything else on the same Redis instance:
+If `REDIS_URL` uses a specific database number (e.g. `redis://localhost:6379/0` uses DB 0), you can flush just that database:
 
 ```bash
 redis-cli -n 0 flushdb
@@ -253,29 +276,14 @@ Replace `0` with the database number from your `REDIS_URL`.
 
 ### Flush by search type
 
-To clear only one type of cached results, match keys by their cache prefix and delete them:
-
 ```bash
-# Text search cache
-redis-cli --scan --pattern "flask_cache_*text*" | xargs redis-cli del
-
-# Image search cache
-redis-cli --scan --pattern "flask_cache_*image*" | xargs redis-cli del
-
-# Video search cache
-redis-cli --scan --pattern "flask_cache_*video*" | xargs redis-cli del
-
-# News search cache
-redis-cli --scan --pattern "flask_cache_*news*" | xargs redis-cli del
-
-# Books search cache
-redis-cli --scan --pattern "flask_cache_*book*" | xargs redis-cli del
-
-# Autocomplete cache
-redis-cli --scan --pattern "flask_cache_*autocomplete*" | xargs redis-cli del
-
-# Instant answer cache
-redis-cli --scan --pattern "flask_cache_*instant*" | xargs redis-cli del
+redis-cli --scan --pattern "pyxis_*text*" | xargs redis-cli del
+redis-cli --scan --pattern "pyxis_*image*" | xargs redis-cli del
+redis-cli --scan --pattern "pyxis_*video*" | xargs redis-cli del
+redis-cli --scan --pattern "pyxis_*news*" | xargs redis-cli del
+redis-cli --scan --pattern "pyxis_*book*" | xargs redis-cli del
+redis-cli --scan --pattern "pyxis_*autocomplete*" | xargs redis-cli del
+redis-cli --scan --pattern "pyxis_*instant*" | xargs redis-cli del
 ```
 
 ### Check cache size
@@ -287,7 +295,7 @@ redis-cli info memory     # memory usage breakdown
 
 ### After flushing
 
-The cache repopulates automatically on the next request for each query. In production, a full flush will temporarily increase load on DuckDuckGo until the cache warms back up.
+The cache repopulates automatically on the next request for each query. In production, a full flush will temporarily increase load on upstream search providers until the cache warms back up.
 
 ## Troubleshooting
 
