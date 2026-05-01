@@ -25,7 +25,14 @@ export const metadata: Metadata = {
   },
   description:
     "Pyxis is a fast, private web search engine. Search the web, images, videos, news, and books without being tracked.",
-  keywords: ["search engine", "private search", "web search", "Pyxis", "fast search", "no tracking"],
+  keywords: [
+    "search engine",
+    "private search",
+    "web search",
+    "Pyxis",
+    "fast search",
+    "no tracking",
+  ],
   authors: [{ name: "Pyxis", url: SITE_URL }],
   creator: "Pyxis",
   robots: {
@@ -63,7 +70,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className={`${geist.variable} antialiased`}>
