@@ -37,12 +37,14 @@ export default function NewsPageWrapper({
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialData?.has_more ?? false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
 
   useEffect(() => {
     setAllResults((initialData?.results as NewsSearchResultItem[]) || []);
     setCurrentPage(1);
     setHasMore(initialData?.has_more ?? false);
     setLoadingMore(false);
+    setLoadMoreError(false);
   }, [query, initialData]);
 
   const { data: newsData, error: newsError } = useSWR<APIResponse>(newsKey, fetcher, {
@@ -62,6 +64,7 @@ export default function NewsPageWrapper({
     if (nextPage > NEWS_MAX_PAGES || loadingMore || !hasMore) return;
 
     setLoadingMore(true);
+    setLoadMoreError(false);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=news&page=${nextPage}`);
       if (!res.ok) throw new Error(`${res.status}`);
@@ -72,6 +75,7 @@ export default function NewsPageWrapper({
       setCurrentPage(nextPage);
       setHasMore((data.has_more ?? false) && nextPage < NEWS_MAX_PAGES);
     } catch {
+      setLoadMoreError(true);
     } finally {
       setLoadingMore(false);
     }
@@ -108,18 +112,24 @@ export default function NewsPageWrapper({
               <>
                 <NewsResultsList results={allResults} />
 
+                {loadMoreError && (
+                  <p className="mt-6 text-sm text-zinc-500 text-center italic">
+                    Nothing new right now
+                  </p>
+                )}
+
                 {hasMore && (
-                  <div className="mt-8 mb-12 max-w-[780px]">
+                  <div className="mt-8 mb-12 max-w-[780px] flex justify-center">
                     <button
                       onClick={loadMore}
                       disabled={loadingMore}
-                      className="w-full py-4 bg-zinc-50 hover:bg-zinc-100/80 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-800 font-semibold tracking-wide rounded-3xl transition-colors duration-300 border border-zinc-100"
+                      className="w-full py-4 px-8 bg-zinc-100 border border-zinc-100/40 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-700 font-semibold text-base rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200"
                     >
                       {loadingMore ? (
                         <span className="flex items-center justify-center gap-2">
-                          <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                          <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                          <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" />
+                          <span className="w-2 h-2 bg-zinc-700 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                          <span className="w-2 h-2 bg-zinc-700 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                          <span className="w-2 h-2 bg-zinc-700 rounded-full animate-bounce" />
                         </span>
                       ) : (
                         "Show More Latest News"

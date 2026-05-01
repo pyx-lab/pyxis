@@ -144,7 +144,7 @@ export default function ImageResultsList({
                 else cardRefs.current.delete(index);
               }}
               tabIndex={0}
-              className="outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded-xl"
+              className="outline-none rounded-3xl"
             >
               <ImageCard
                 item={item}
@@ -190,13 +190,15 @@ function ImageCard({ item, index, isSelected, onClick }: ImageCardProps) {
 
   return (
     <div
-      className={`cursor-pointer flex flex-col rounded-xl transition-all duration-200 ${
-        isSelected ? "ring-2 ring-black ring-offset-2 scale-[1.01]" : ""
+      className={`cursor-pointer flex flex-col bg-zinc-100 rounded-3xl overflow-hidden transition-all duration-300 ${
+        isSelected
+          ? "border-2 border-zinc-900 shadow-[0_0_25px_rgba(0,0,0,0.1)] scale-[1.01]"
+          : "border border-zinc-100/40 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200"
       }`}
       onClick={onClick}
     >
       <div
-        className="relative w-full rounded-xl overflow-hidden bg-gray-200"
+        className="relative w-full overflow-hidden bg-zinc-200"
         style={{ aspectRatio: ratio }}
       >
         <img
@@ -209,7 +211,7 @@ function ImageCard({ item, index, isSelected, onClick }: ImageCardProps) {
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
-      <div className="flex items-center gap-1.5 mt-1.5 px-0.5">
+      <div className="flex items-center gap-1.5 px-2.5 pt-2">
         <img
           src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=16`}
           alt=""
@@ -220,11 +222,11 @@ function ImageCard({ item, index, isSelected, onClick }: ImageCardProps) {
             e.currentTarget.style.display = "none";
           }}
         />
-        <p className="text-[11px] text-gray-400 truncate">
+        <p className="text-[11px] text-zinc-500 truncate">
           {item.source || hostname}
         </p>
       </div>
-      <p className="text-[12px] font-medium text-gray-700 line-clamp-2 leading-snug px-0.5 mt-0.5">
+      <p className="text-[12px] font-medium text-zinc-700 line-clamp-2 leading-snug px-2.5 pt-1 pb-2.5">
         {item.title}
       </p>
     </div>

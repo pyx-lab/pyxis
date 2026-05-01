@@ -7,7 +7,6 @@ interface LibraryCategoriesProps {
   currentQuery: string;
 }
 
-// Expanded to include a rich mix of popular collections and specific genres
 const POPULAR_CATEGORIES = [
   "Bestsellers",
   "Fiction",
@@ -17,7 +16,7 @@ const POPULAR_CATEGORIES = [
   "Science Fiction",
   "Philosophy",
   "Artificial Intelligence",
-  "Programming Languages", // <-- Changed from "Python Programming"
+  "Programming Languages",
   "Classic Literature",
   "Art & Photography",
 ];
@@ -70,7 +69,6 @@ export default function LibraryCategories({ currentQuery }: LibraryCategoriesPro
                     : "bg-zinc-100 text-zinc-600 border border-zinc-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_16px_-4px_rgba(0,0,0,0.12)] hover:-translate-y-1 hover:text-zinc-900 hover:border-zinc-300"
                 }`}
               >
-                {/* Responsive text: 13px on mobile, 14px on tablet/desktop */}
                 <span className="text-[13px] md:text-[14px] font-medium tracking-wide">
                   {category}
                 </span>

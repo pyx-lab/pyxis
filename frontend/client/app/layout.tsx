@@ -49,10 +49,11 @@ export const metadata: Metadata = {
       "Fast, private web search. Search the web, images, videos, news, and books without being tracked.",
     images: [
       {
-        url: "/images/pyxis-preview-1.jpg",
+        url: "/images/pyxis-og.jpg",
         width: 1200,
         height: 630,
         alt: "Pyxis Search Engine",
+        type: "image/jpeg",
       },
     ],
   },
@@ -61,7 +62,7 @@ export const metadata: Metadata = {
     title: "Pyxis | Search the Web",
     description:
       "Fast, private web search. Search the web, images, videos, news, and books without being tracked.",
-    images: ["/images/pyxis-preview-1.jpg"],
+    images: ["/images/pyxis-og.jpg"],
   },
   icons: {
     icon: "/images/pyxis.svg",

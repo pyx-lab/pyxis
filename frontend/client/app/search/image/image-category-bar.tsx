@@ -9,10 +9,6 @@ interface ImageCategoryBarProps {
   activeTags: string[];
 }
 
-/**
- * Derives a deterministic accent colour for a keyword chip when no thumbnail
- * is available. The colour is stable across renders for the same string.
- */
 function stringToColor(str: string): string {
   const palette = [
     "#EF4444",
@@ -29,19 +25,6 @@ function stringToColor(str: string): string {
   return palette[Math.abs(hash) % palette.length];
 }
 
-/**
- * Horizontal scrollable bar that displays:
- *  1. The active search query pill (with a clear button).
- *  2. Active tag pills (each removable via a URL update).
- *  3. Suggestion chips derived from keyword extraction or autocomplete.
- *
- * Suggestion chips use a coloured initial avatar instead of remote thumbnails,
- * which eliminates the 12+ Wikipedia API round-trips that previously blocked
- * the bar from rendering.
- *
- * All navigation is handled through URL params so the parent Server Component
- * re-runs and the Redis-cached API response is reused where possible.
- */
 export default function ImageCategoryBar({
   keywords,
   currentQuery,
@@ -50,10 +33,6 @@ export default function ImageCategoryBar({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  /**
-   * Builds a URL that adds or removes a tag from the ``tags`` query parameter
-   * while preserving all other search params.
-   */
   const getTagUrl = (tag: string, action: "add" | "remove"): string => {
     const params = new URLSearchParams(searchParams.toString());
     let next = [...activeTags];
@@ -74,8 +53,6 @@ export default function ImageCategoryBar({
     return `/search/image?${params.toString()}`;
   };
 
-  // Filter out the current query and any already-active tags from suggestions,
-  // then cap at 12 chips to keep the bar compact.
   const suggestions = keywords
     .filter(
       (k) =>
@@ -88,7 +65,6 @@ export default function ImageCategoryBar({
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
-      {/* 1. Active query pill */}
       {currentQuery && (
         <div className="flex-shrink-0 flex items-center gap-2 bg-black text-white pl-4 pr-3 py-1 rounded-lg h-[40px] shadow-sm">
           <span className="text-sm font-medium capitalize">{currentQuery}</span>
@@ -114,7 +90,6 @@ export default function ImageCategoryBar({
         </div>
       )}
 
-      {/* 2. Active tag pills */}
       {activeTags.map((tag, i) => (
         <div
           key={`tag-${i}`}
@@ -143,12 +118,10 @@ export default function ImageCategoryBar({
         </div>
       ))}
 
-      {/* Divider between active pills and suggestions */}
       {hasPills && suggestions.length > 0 && (
         <div className="h-6 w-[1px] bg-gray-200 mx-1 flex-shrink-0" />
       )}
 
-      {/* 3. Suggestion chips – coloured initial avatar, no remote fetch */}
       {suggestions.map((term, i) => (
         <Link
           key={i}

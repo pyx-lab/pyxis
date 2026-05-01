@@ -54,15 +54,11 @@ export default function InstantAnswer({
         >
           {!imageError ? (
             isPortrait ? (
-              // Portrait mode: side blur columns + centered sharp image
-              // Use fixed height for the entire row
               <div className="flex items-stretch justify-center w-full h-48 sm:h-60 md:h-72">
-                {/* Left zoomed blur column */}
                 <div
                   className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
                   style={{ backgroundImage: `url(${imageUrl})` }}
                 />
-                {/* Center image (sharp, full height) */}
                 <div className="flex items-center justify-center h-full">
                   <img
                     ref={imgRef}
@@ -75,14 +71,12 @@ export default function InstantAnswer({
                     onError={() => setImageError(true)}
                   />
                 </div>
-                {/* Right zoomed blur column */}
                 <div
                   className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
                   style={{ backgroundImage: `url(${imageUrl})` }}
                 />
               </div>
             ) : (
-              // Landscape/square mode: full blurred background + centered sharp image
               <div className="relative flex items-center justify-center w-full h-48 sm:h-60 md:h-72">
                 <div
                   className="absolute inset-0 w-full h-full bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
@@ -102,7 +96,6 @@ export default function InstantAnswer({
             )
           ) : null}
 
-          {/* Wikipedia link (always on top) */}
           {!imageError && (
             <motion.a
               href={`https://wikipedia.org/wiki/${encodeURIComponent(query)}`}
