@@ -193,17 +193,27 @@ export function SidePanel({
   const item = results[index];
   const thumb = item.thumbnail?.trim();
   const [fullReady, setFullReady] = useState(false);
-  const [headerH, setHeaderH] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // Determine screen size
   useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 1024) {
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Prevent background scrolling on mobile while panel is open
+  useEffect(() => {
+    if (isMobile) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [isMobile]);
+
+  // Full‑resolution image lazy load
   useEffect(() => {
     setFullReady(false);
     if (!item.image) return;
@@ -217,7 +227,10 @@ export function SidePanel({
     };
   }, [index, item.image]);
 
+  // Desktop sticky header measurement (only relevant if not mobile)
+  const [headerH, setHeaderH] = useState(0);
   useEffect(() => {
+    if (isMobile) return;
     const measure = () => {
       const h =
         document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
@@ -226,7 +239,7 @@ export function SidePanel({
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, []);
+  }, [isMobile]);
 
   const hostname = (() => {
     try {
@@ -236,24 +249,190 @@ export function SidePanel({
     }
   })();
 
+  // Debugging log – remove later if desired
+  console.log("SidePanel render", { isMobile, index, headerH, item });
+
+  // ---------- Mobile overlay ----------
+  if (isMobile) {
+    return (
+      <motion.div
+        key={`mobile-${index}`}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 220 }}
+        className="fixed inset-0 z-[60] bg-white flex flex-col"
+        style={{ touchAction: "none" }} // helps prevent background scroll
+      >
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-4 py-3 shrink-0 border-b border-gray-100">
+          <div className="flex items-center gap-1 bg-white rounded-full p-1 shadow-sm border border-gray-200">
+            <button
+              onClick={onPrev}
+              disabled={index === 0}
+              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-50 active:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-gray-700"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <div className="px-2 text-xs font-medium text-gray-500 tabular-nums">
+              {index + 1} / {results.length}
+            </div>
+            <button
+              onClick={onNext}
+              disabled={index === results.length - 1}
+              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-50 active:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-gray-700"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="w-11 h-11 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors text-gray-600"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Image area */}
+        <div className="flex-1 px-4 pb-4 flex flex-col min-h-0">
+          <div className="bg-white rounded-[24px] shadow-sm border border-gray-200 flex flex-col flex-1 min-h-0 overflow-hidden relative">
+            <div className="relative bg-gray-50 flex-1 min-h-0 p-2 flex items-center justify-center overflow-hidden z-0">
+              <style>{`@keyframes sidePanelFade { from { opacity: 0 } to { opacity: 1 } }`}</style>
+              <div className="relative w-full h-full flex items-center justify-center">
+                {thumb && (
+                  <img
+                    src={thumb}
+                    alt={item.title}
+                    decoding="async"
+                    className="w-full h-full object-contain rounded-xl"
+                  />
+                )}
+                {fullReady && (
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-contain rounded-xl"
+                    style={{ animation: "sidePanelFade 0.4s ease forwards" }}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Info & buttons */}
+            <div className="flex flex-col shrink-0 bg-white border-t border-gray-100 z-10">
+              <div className="px-4 pt-4 pb-3 flex flex-col gap-2">
+                <h2 className="text-base font-medium text-gray-900 leading-snug">
+                  {item.title}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {item.width && item.height && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-100/80 px-2.5 py-1 rounded-full">
+                      <svg
+                        className="w-3.5 h-3.5 opacity-70"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l-5-5m11 5v-4m0 4h-4m4 0l-5-5"
+                        />
+                      </svg>
+                      {item.width} × {item.height}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-100/80 px-2.5 py-1 rounded-full max-w-full overflow-hidden">
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=16`}
+                      alt=""
+                      width={14}
+                      height={14}
+                      className="rounded-sm flex-shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <span className="truncate">{item.source || hostname}</span>
+                  </span>
+                </div>
+              </div>
+              <div className="px-4 pb-4 pt-1 flex flex-col gap-2 shrink-0">
+                <a
+                  href={item.image}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 bg-black text-white rounded-full text-[14px] font-medium text-center hover:bg-gray-800 active:bg-gray-900 transition-colors shadow-sm"
+                >
+                  View Full Image
+                </a>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 bg-gray-100 text-gray-800 rounded-full text-[14px] font-medium text-center hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                >
+                  Visit Page
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // ---------- Desktop slide‑in panel ----------
   return (
     <motion.div
+      key={`desktop-${index}`}
       initial={{ x: "100%", opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: "100%", opacity: 0 }}
-      transition={{
-        type: "spring",
-        damping: 25,
-        stiffness: 200,
-      }}
-      className="fixed right-0 top-[var(--header-h)] w-full h-[calc(100vh-var(--header-h))] bg-white shadow-2xl flex flex-col z-40 overflow-hidden lg:w-[488px] lg:border-l lg:border-gray-200"
-      style={
-        {
-          "--header-h": `${headerH}px`,
-        } as React.CSSProperties
-      }
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
+      className="fixed right-0 top-[var(--header-h)] bottom-0 w-[488px] bg-white shadow-2xl flex flex-col z-40 overflow-hidden border-l border-gray-200"
+      style={{ "--header-h": `${headerH}px` } as React.CSSProperties}
     >
-      <div className="flex items-center justify-between px-4 py-4 shrink-0 z-10 border-b border-gray-100 lg:border-none">
+      <div className="flex items-center justify-between px-4 py-4 shrink-0 z-10 border-b border-gray-100">
         <div className="flex items-center gap-1 bg-white rounded-full p-1 shadow-sm border border-gray-200">
           <button
             onClick={onPrev}
@@ -344,13 +523,13 @@ export function SidePanel({
           </div>
 
           <div className="flex flex-col shrink-0 bg-white border-t border-gray-100 z-10">
-            <div className="px-4 md:px-5 pt-4 md:pt-5 pb-3 flex flex-col gap-2 md:gap-3">
-              <h2 className="text-base md:text-[1.1rem] font-medium text-gray-900 leading-snug">
+            <div className="px-4 pt-4 pb-3 flex flex-col gap-2">
+              <h2 className="text-base font-medium text-gray-900 leading-snug">
                 {item.title}
               </h2>
               <div className="flex flex-wrap gap-2">
                 {item.width && item.height && (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] md:text-xs font-medium text-gray-600 bg-gray-100/80 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-100/80 px-2.5 py-1 rounded-full">
                     <svg
                       className="w-3.5 h-3.5 opacity-70"
                       fill="none"
@@ -367,7 +546,7 @@ export function SidePanel({
                     {item.width} × {item.height}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1.5 text-[11px] md:text-xs font-medium text-gray-600 bg-gray-100/80 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full max-w-full overflow-hidden">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-100/80 px-2.5 py-1 rounded-full max-w-full overflow-hidden">
                   <img
                     src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=16`}
                     alt=""
@@ -382,13 +561,12 @@ export function SidePanel({
                 </span>
               </div>
             </div>
-
-            <div className="px-4 md:px-5 pb-4 md:pb-5 pt-1 flex flex-col gap-2 md:gap-2.5 shrink-0">
+            <div className="px-4 pb-4 pt-1 flex flex-col gap-2 shrink-0">
               <a
                 href={item.image}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-2.5 md:py-3.5 bg-black text-white rounded-full text-[13px] md:text-sm font-medium text-center hover:bg-gray-800 active:bg-gray-900 transition-colors shadow-sm"
+                className="w-full py-3 bg-black text-white rounded-full text-[14px] font-medium text-center hover:bg-gray-800 active:bg-gray-900 transition-colors shadow-sm"
               >
                 View Full Image
               </a>
@@ -396,7 +574,7 @@ export function SidePanel({
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-2.5 md:py-3.5 bg-gray-100 text-gray-800 rounded-full text-[13px] md:text-sm font-medium text-center hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                className="w-full py-3 bg-gray-100 text-gray-800 rounded-full text-[14px] font-medium text-center hover:bg-gray-200 active:bg-gray-300 transition-colors"
               >
                 Visit Page
               </a>
