@@ -6,7 +6,7 @@ import { useState } from "react";
 import HomeSearchBar from "./components/homesearchbar";
 
 const SEARCH_TABS = [
-  { label: "Web", value: "text" }, 
+  { label: "Web", value: "text" },
   { label: "Images", value: "image" },
   { label: "Videos", value: "video" },
   { label: "News", value: "news" },
@@ -53,10 +53,27 @@ export default function Home() {
       </main>
 
       <footer className="pt-5 pb-[max(20px,env(safe-area-inset-bottom))] px-6 flex items-center justify-center gap-6 border-t border-gray-100 relative z-20 bg-white/80 backdrop-blur-sm">
-        <span className="text-xs text-gray-400">© {new Date().getFullYear()} PyxLab</span>
-        <Link href="/about" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">About</Link>
-        <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Privacy</Link>
-        <Link href="/terms" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Terms</Link>
+        <span className="text-xs text-gray-400">
+          © {new Date().getFullYear()} PyxLab
+        </span>
+        <Link
+          href="/about"
+          className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+        >
+          About
+        </Link>
+        <Link
+          href="/privacy"
+          className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+        >
+          Privacy
+        </Link>
+        <Link
+          href="/terms"
+          className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+        >
+          Terms
+        </Link>
       </footer>
     </div>
   );
