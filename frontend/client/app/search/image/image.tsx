@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ImageSearchResultItem } from "../../types";
 
@@ -21,6 +21,16 @@ export default function ImageResultsList({
 }: ImageResultsListProps) {
   const isOpen = selectedIndex !== null;
   const [numCols, setNumCols] = useState(5);
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const prevSelectedIndex = useRef<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     const update = () => {
@@ -57,6 +67,43 @@ export default function ImageResultsList({
     return cols;
   }, [results, numCols]);
 
+  const scrollToCard = (card: HTMLDivElement) => {
+    const header = document.querySelector("header");
+    const headerHeight = header ? header.getBoundingClientRect().height : 0;
+    const rect = card.getBoundingClientRect();
+    const absoluteTop = window.scrollY + rect.top;
+    const offsetPosition = absoluteTop - headerHeight - 16;
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    if (selectedIndex !== null) {
+      const card = cardRefs.current.get(selectedIndex);
+      if (card) {
+        scrollToCard(card);
+        prevSelectedIndex.current = selectedIndex;
+      }
+    }
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    if (selectedIndex === null && prevSelectedIndex.current !== null) {
+      const lastIndex = prevSelectedIndex.current;
+      const timeout = setTimeout(() => {
+        const card = cardRefs.current.get(lastIndex);
+        if (card) {
+          scrollToCard(card);
+          card.focus();
+        }
+        prevSelectedIndex.current = null;
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [selectedIndex]);
+
   if (isLoading) return <ImageSkeletonGrid />;
 
   if (!results || results.length === 0) {
@@ -89,7 +136,16 @@ export default function ImageResultsList({
           style={{ gap: "0.875rem" }}
         >
           {col.map(({ item, index }) => (
-            <div key={`${item.image}-${index}`} id={`pyxis-img-${index}`}>
+            <div
+              key={`${item.image}-${index}`}
+              id={`pyxis-img-${index}`}
+              ref={(el) => {
+                if (el) cardRefs.current.set(index, el);
+                else cardRefs.current.delete(index);
+              }}
+              tabIndex={0}
+              className="outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded-xl"
+            >
               <ImageCard
                 item={item}
                 index={index}
@@ -134,8 +190,8 @@ function ImageCard({ item, index, isSelected, onClick }: ImageCardProps) {
 
   return (
     <div
-      className={`cursor-pointer flex flex-col rounded-xl ${
-        isSelected ? "ring-2 ring-black ring-offset-1" : ""
+      className={`cursor-pointer flex flex-col rounded-xl transition-all duration-200 ${
+        isSelected ? "ring-2 ring-black ring-offset-2 scale-[1.01]" : ""
       }`}
       onClick={onClick}
     >
@@ -193,9 +249,13 @@ export function SidePanel({
   const item = results[index];
   const thumb = item.thumbnail?.trim();
   const [fullReady, setFullReady] = useState(false);
+  const [fullImageDimensions, setFullImageDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const scrollYRef = useRef(0);
 
-  // Determine screen size
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
     check();
@@ -203,31 +263,49 @@ export function SidePanel({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Prevent background scrolling on mobile while panel is open
   useEffect(() => {
     if (isMobile) {
-      document.body.style.overflow = "hidden";
+      scrollYRef.current = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollYRef.current}px`;
+      document.body.style.width = "100%";
+      document.body.style.left = "0";
+      document.body.style.right = "0";
       return () => {
-        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        window.scrollTo(0, scrollYRef.current);
       };
     }
   }, [isMobile]);
 
-  // Full‑resolution image lazy load
   useEffect(() => {
     setFullReady(false);
+    setFullImageDimensions(null);
     if (!item.image) return;
     const img = new window.Image();
     img.src = item.image;
-    img.onload = () => setFullReady(true);
-    img.onerror = () => setFullReady(false);
+    img.onload = () => {
+      setFullReady(true);
+      setFullImageDimensions({ width: img.width, height: img.height });
+    };
+    img.onerror = () => {
+      setFullReady(false);
+      setFullImageDimensions(null);
+    };
     return () => {
       img.onload = null;
       img.onerror = null;
     };
   }, [index, item.image]);
 
-  // Desktop sticky header measurement (only relevant if not mobile)
+  const isPortrait = fullImageDimensions
+    ? fullImageDimensions.height > fullImageDimensions.width
+    : false;
+
   const [headerH, setHeaderH] = useState(0);
   useEffect(() => {
     if (isMobile) return;
@@ -249,10 +327,8 @@ export function SidePanel({
     }
   })();
 
-  // Debugging log – remove later if desired
-  console.log("SidePanel render", { isMobile, index, headerH, item });
+  const immediateImageUrl = thumb || item.image;
 
-  // ---------- Mobile overlay ----------
   if (isMobile) {
     return (
       <motion.div
@@ -262,9 +338,8 @@ export function SidePanel({
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 220 }}
         className="fixed inset-0 z-[60] bg-white flex flex-col"
-        style={{ touchAction: "none" }} // helps prevent background scroll
+        style={{ touchAction: "none" }}
       >
-        {/* Top bar */}
         <div className="flex items-center justify-between px-4 py-3 shrink-0 border-b border-gray-100">
           <div className="flex items-center gap-1 bg-white rounded-full p-1 shadow-sm border border-gray-200">
             <button
@@ -309,7 +384,6 @@ export function SidePanel({
               </svg>
             </button>
           </div>
-
           <button
             onClick={onClose}
             className="w-11 h-11 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors text-gray-600"
@@ -330,33 +404,85 @@ export function SidePanel({
           </button>
         </div>
 
-        {/* Image area */}
-        <div className="flex-1 px-4 pb-4 flex flex-col min-h-0">
-          <div className="bg-white rounded-[24px] shadow-sm border border-gray-200 flex flex-col flex-1 min-h-0 overflow-hidden relative">
-            <div className="relative bg-gray-50 flex-1 min-h-0 p-2 flex items-center justify-center overflow-hidden z-0">
-              <style>{`@keyframes sidePanelFade { from { opacity: 0 } to { opacity: 1 } }`}</style>
+        <div className="flex-1 px-0 pb-4 flex flex-col min-h-0">
+          <div className="bg-white rounded-t-[24px] shadow-sm border border-gray-200 flex flex-col flex-1 min-h-0 overflow-hidden relative">
+            <div className="relative bg-gray-50 flex-1 min-h-0 overflow-hidden z-0">
               <div className="relative w-full h-full flex items-center justify-center">
-                {thumb && (
-                  <img
-                    src={thumb}
-                    alt={item.title}
-                    decoding="async"
-                    className="w-full h-full object-contain rounded-xl"
-                  />
-                )}
-                {fullReady && (
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    decoding="async"
-                    className="absolute inset-0 w-full h-full object-contain rounded-xl"
-                    style={{ animation: "sidePanelFade 0.4s ease forwards" }}
-                  />
-                )}
+                {(() => {
+                  if (!immediateImageUrl) return null;
+                  if (!isPortrait) {
+                    return (
+                      <div className="relative w-full h-full overflow-hidden">
+                        <div
+                          className="absolute inset-0 w-full h-full bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                          style={{
+                            backgroundImage: `url(${immediateImageUrl})`,
+                          }}
+                        />
+                        <img
+                          src={immediateImageUrl}
+                          alt={item.title}
+                          decoding="async"
+                          className="relative w-auto h-full max-w-full object-contain z-10 mx-auto"
+                        />
+                        {fullReady && (
+                          <motion.img
+                            src={item.image}
+                            alt={item.title}
+                            decoding="async"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
+                            className="absolute top-0 left-0 w-auto h-full max-w-full object-contain z-20 mx-auto"
+                            style={{
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="flex items-stretch justify-center w-full h-full">
+                        <div
+                          className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                          style={{
+                            backgroundImage: `url(${immediateImageUrl})`,
+                          }}
+                        />
+                        <div className="flex items-center justify-center h-full relative">
+                          <img
+                            src={immediateImageUrl}
+                            alt={item.title}
+                            decoding="async"
+                            className="h-full w-auto object-contain"
+                          />
+                          {fullReady && (
+                            <motion.img
+                              src={item.image}
+                              alt={item.title}
+                              decoding="async"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.35, ease: "easeOut" }}
+                              className="absolute top-0 left-0 h-full w-auto object-contain z-10"
+                            />
+                          )}
+                        </div>
+                        <div
+                          className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                          style={{
+                            backgroundImage: `url(${immediateImageUrl})`,
+                          }}
+                        />
+                      </div>
+                    );
+                  }
+                })()}
               </div>
             </div>
 
-            {/* Info & buttons */}
             <div className="flex flex-col shrink-0 bg-white border-t border-gray-100 z-10">
               <div className="px-4 pt-4 pb-3 flex flex-col gap-2">
                 <h2 className="text-base font-medium text-gray-900 leading-snug">
@@ -421,7 +547,6 @@ export function SidePanel({
     );
   }
 
-  // ---------- Desktop slide‑in panel ----------
   return (
     <motion.div
       key={`desktop-${index}`}
@@ -476,7 +601,6 @@ export function SidePanel({
             </svg>
           </button>
         </div>
-
         <button
           onClick={onClose}
           className="w-11 h-11 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors text-gray-600"
@@ -497,28 +621,73 @@ export function SidePanel({
         </button>
       </div>
 
-      <div className="flex-1 px-4 pb-6 flex flex-col min-h-0">
+      <div className="flex-1 px-0 pb-6 flex flex-col min-h-0">
         <div className="bg-white rounded-[24px] shadow-sm border border-gray-200 flex flex-col flex-1 min-h-0 overflow-hidden relative">
-          <div className="relative bg-gray-50 flex-1 min-h-0 p-2 flex items-center justify-center overflow-hidden z-0">
-            <style>{`@keyframes sidePanelFade { from { opacity: 0 } to { opacity: 1 } }`}</style>
+          <div className="relative bg-gray-50 flex-1 min-h-0 overflow-hidden z-0">
             <div className="relative w-full h-full flex items-center justify-center">
-              {thumb && (
-                <img
-                  src={thumb}
-                  alt={item.title}
-                  decoding="async"
-                  className="w-full h-full object-contain rounded-xl"
-                />
-              )}
-              {fullReady && (
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  decoding="async"
-                  className="absolute inset-0 w-full h-full object-contain rounded-xl"
-                  style={{ animation: "sidePanelFade 0.4s ease forwards" }}
-                />
-              )}
+              {(() => {
+                if (!immediateImageUrl) return null;
+                if (!isPortrait) {
+                  return (
+                    <div className="relative w-full h-full overflow-hidden">
+                      <div
+                        className="absolute inset-0 w-full h-full bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                        style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                      />
+                      <img
+                        src={immediateImageUrl}
+                        alt={item.title}
+                        decoding="async"
+                        className="relative w-auto h-full max-w-full object-contain z-10 mx-auto"
+                      />
+                      {fullReady && (
+                        <motion.img
+                          src={item.image}
+                          alt={item.title}
+                          decoding="async"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.35, ease: "easeOut" }}
+                          className="absolute top-0 left-0 w-auto h-full max-w-full object-contain z-20 mx-auto"
+                          style={{ left: "50%", transform: "translateX(-50%)" }}
+                        />
+                      )}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="flex items-stretch justify-center w-full h-full">
+                      <div
+                        className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                        style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                      />
+                      <div className="flex items-center justify-center h-full relative">
+                        <img
+                          src={immediateImageUrl}
+                          alt={item.title}
+                          decoding="async"
+                          className="h-full w-auto object-contain"
+                        />
+                        {fullReady && (
+                          <motion.img
+                            src={item.image}
+                            alt={item.title}
+                            decoding="async"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
+                            className="absolute top-0 left-0 h-full w-auto object-contain z-10"
+                          />
+                        )}
+                      </div>
+                      <div
+                        className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                        style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                      />
+                    </div>
+                  );
+                }
+              })()}
             </div>
           </div>
 
