@@ -234,10 +234,10 @@ def search():
         return jsonify({"error": "Invalid search type"}), 400
 
     backend_map = {
-        "text": "duckduckgo",
-        "images": "duckduckgo",
-        "videos": "duckduckgo",
-        "news": "duckduckgo",
+        "text": "auto",
+        "images": "auto",
+        "videos": "auto",
+        "news": "auto",
         "books": "openlibrary",
     }
     backend = backend_map.get(search_type, "duckduckgo")
