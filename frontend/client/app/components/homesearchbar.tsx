@@ -9,8 +9,9 @@ interface HomeSearchBarProps {
   searchMode?: string;
 }
 
-
-export default function HomeSearchBar({ searchMode = "text" }: HomeSearchBarProps) {
+export default function HomeSearchBar({
+  searchMode = "text",
+}: HomeSearchBarProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [hasTyped, setHasTyped] = useState(false);
@@ -29,12 +30,13 @@ export default function HomeSearchBar({ searchMode = "text" }: HomeSearchBarProp
       "What far galaxies shimmer in its shadowed deep?",
       "What blue star-flame pulses as Alpha Pyxidis?",
       "Can you spot Pyxis between other southern constellations?",
-      "Why does Pyxis still whisper to wandering souls?"
+      "Why does Pyxis still whisper to wandering souls?",
     ];
-    
-    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+
+    const randomQuestion =
+      questions[Math.floor(Math.random() * questions.length)];
     let currentIndex = 0;
-    
+
     const typingInterval = setInterval(() => {
       if (currentIndex < randomQuestion.length) {
         setPlaceholderText(randomQuestion.slice(0, currentIndex + 1));
@@ -109,7 +111,6 @@ export default function HomeSearchBar({ searchMode = "text" }: HomeSearchBarProp
     <div className="w-full max-w-4xl relative" ref={containerRef}>
       <form onSubmit={handleSearch} className="relative w-full">
         <div className="relative flex items-center w-full group">
-
           <input
             type="text"
             id="search-input-home"
@@ -132,7 +133,9 @@ export default function HomeSearchBar({ searchMode = "text" }: HomeSearchBarProp
 
           {ghostText && hasTyped && (
             <div className="absolute inset-0 pointer-events-none flex items-center px-5 sm:px-7 overflow-hidden whitespace-nowrap">
-              <span className="text-transparent text-sm sm:text-lg">{query}</span>
+              <span className="text-transparent text-sm sm:text-lg">
+                {query}
+              </span>
               <span className="text-gray-400 text-sm sm:text-lg truncate">
                 {ghostText.slice(query.length)}
               </span>
@@ -164,44 +167,79 @@ export default function HomeSearchBar({ searchMode = "text" }: HomeSearchBarProp
             )}
           </div>
 
-          <button 
-            type="submit" 
-            className="absolute right-0 top-0 bottom-0 w-16 bg-transparent z-20 rounded-r-full" 
+          <button
+            type="submit"
+            className="absolute right-0 top-0 bottom-0 w-16 bg-transparent z-20 rounded-r-full"
             disabled={isLoading}
           />
         </div>
 
         <AnimatePresence>
-          {showSuggestions && (suggestions.length > 0 || richSuggestions.length > 0) && (
-            <motion.div
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
-              className="absolute top-full left-0 w-full mt-3 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden z-50 py-3"
-            >
-              <div className="max-h-[35vh] overflow-y-auto overscroll-contain py-3">
-              {richSuggestions.map((item, i) => (
-                <div key={i} onClick={() => handleSearch(undefined, item.title)} className="px-5 py-3 hover:bg-gray-50 cursor-pointer flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
-                    {item.thumbnail && <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-black font-medium text-sm">{item.title}</span>
-                    <span className="text-gray-500 text-xs">{item.description}</span>
-                  </div>
+          {showSuggestions &&
+            (suggestions.length > 0 || richSuggestions.length > 0) && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                className="absolute top-full left-0 w-full mt-3 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden z-50 py-3"
+              >
+                <div className="max-h-[35vh] overflow-y-auto overscroll-contain py-3">
+                  {richSuggestions.map((item, i) => (
+                    <div
+                      key={i}
+                      onClick={() => {
+                        setQuery(item.title);
+                        handleSearch(undefined, item.title);
+                      }}
+                      className="px-5 py-3 hover:bg-gray-50 cursor-pointer flex items-center gap-4"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
+                        {item.thumbnail && (
+                          <img
+                            src={item.thumbnail}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-black font-medium text-sm">
+                          {item.title}
+                        </span>
+                        <span className="text-gray-500 text-xs">
+                          {item.description}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {suggestions.map((s, i) => (
+                    <div
+                      key={i}
+                      onClick={() => {
+                        setQuery(s);
+                        handleSearch(undefined, s);
+                      }}
+                      className="px-6 py-2.5 hover:bg-gray-50 cursor-pointer flex items-center gap-3"
+                    >
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      <span className="text-black text-sm">{s}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              {suggestions.map((s, i) => (
-                <div key={i} onClick={() => handleSearch(undefined, s)} className="px-6 py-2.5 hover:bg-gray-50 cursor-pointer flex items-center gap-3">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <span className="text-black text-sm">{s}</span>
-                </div>
-              ))}
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
         </AnimatePresence>
       </form>
     </div>
