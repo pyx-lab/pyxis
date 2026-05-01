@@ -21,7 +21,7 @@
 
 ## Architecture Overview
 
-![Pyxis architecture diagram](doc/figure/Pyxis_Architecture.jpg)
+![Pyxis architecture diagram](doc/figure/Pyxis_Architecture_V1.jpg)
 
 - **Frontend** – Next.js App Router application. API calls are proxied to the backend via Next.js rewrites (`/api/*` → `http://localhost:5000`).
 - **Backend** – Flask REST API. Fetches from multiple search engines via `ddgs`, applies content filters, and caches responses in Redis.
