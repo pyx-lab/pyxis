@@ -157,13 +157,21 @@ export default function PageWrapper({
               )}
 
               {hasMore && (
-                <div className="mt-12 mb-12 flex justify-center">
+                <div className="mt-8 mb-12 flex justify-center">
                   <button
                     onClick={loadMore}
                     disabled={loadingMore}
-                    className="w-full max-w-[300px] py-3 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 font-medium rounded-full transition-colors border border-gray-200 shadow-sm"
+                    className="w-full py-4 px-8 bg-zinc-100 border border-zinc-100/40 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-700 font-semibold text-base rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200"
                   >
-                    {loadingMore ? "Loading..." : "Show More Books"}
+                    {loadingMore ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-2 h-2 bg-zinc-700 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-2 h-2 bg-zinc-700 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-2 h-2 bg-zinc-700 rounded-full animate-bounce" />
+                      </span>
+                    ) : (
+                      "Show More Books"
+                    )}
                   </button>
                 </div>
               )}

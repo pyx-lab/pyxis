@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import useSWR from "swr";
 import type {
   APIResponse,
@@ -69,11 +69,9 @@ export default function PageWrapper({
     ? `/api/search?q=${encodeURIComponent(query)}&type=text&page=1`
     : null;
 
-  const retryCountRef = useRef(0);
   const [exhausted, setExhausted] = useState(false);
 
   useEffect(() => {
-    retryCountRef.current = 0;
     setExhausted(false);
     setAllResults((initialData?.results as TextSearchResultItem[]) || []);
     setCurrentPage(1);
@@ -91,7 +89,6 @@ export default function PageWrapper({
     dedupingInterval: 300000,
     shouldRetryOnError: true,
     onErrorRetry: (_, _key, _config, revalidate, { retryCount }) => {
-      retryCountRef.current = retryCount;
       if (retryCount >= MAX_RETRIES) {
         setExhausted(true);
         return;
@@ -229,12 +226,11 @@ export default function PageWrapper({
                 )}
 
                 {hasMore && (
-                  <div className="mt-8 mb-12 max-w-[800px] flex justify-center">
+                  <div className="mt-8 mb-12 max-w-[780px] flex justify-center">
                     <button
                       onClick={loadMore}
                       disabled={loadingMore}
-                      className="w-full max-w-[800px] py-4 px-8 bg-[#f7f7f7] hover:bg-[#efefef] disabled:opacity-50 disabled:cursor-not-allowed text-[#1c1c1c] font-semibold text-base rounded-3xl
-                      transition-colors border-none"
+                      className="w-full py-4 px-8 bg-zinc-100 border border-zinc-100/40 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-700 font-semibold text-base rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200"
                     >
                       {loadingMore ? (
                         <span className="flex items-center justify-center gap-2">

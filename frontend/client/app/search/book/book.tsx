@@ -52,7 +52,7 @@ export default function BookResultsList({ results }: BookResultsListProps) {
             variants={itemVariants}
             className="group block h-full outline-none"
           >
-            <div className="relative h-full w-full max-w-[180px] md:max-w-[240px] mx-auto bg-zinc-100 rounded-[28px] md:rounded-[32px] px-3 pb-5 pt-0 md:p-5 md:pb-7 flex flex-col items-center border border-zinc-200/50 shadow-sm hover:shadow-md transition-all duration-300 ease-out">
+            <div className="relative h-full w-full max-w-[180px] md:max-w-[240px] mx-auto bg-zinc-100 rounded-3xl px-3 pb-5 pt-0 md:p-5 md:pb-7 flex flex-col items-center border border-zinc-100/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200">
               <div className="w-[75%] md:w-[82%] max-w-[140px] md:max-w-[180px] aspect-[2/3] -mt-16 md:-mt-20 mb-3 md:mb-5 rounded-md overflow-hidden bg-zinc-200 shadow-[0_12px_24px_rgba(0,0,0,0.12),0_4px_8px_rgba(0,0,0,0.06)] group-hover:-translate-y-2 group-hover:shadow-[0_20px_32px_rgba(0,0,0,0.16),0_6px_12px_rgba(0,0,0,0.08)] transition-all duration-300 ease-out shrink-0 relative ring-1 ring-black/5 flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center justify-center text-zinc-400 p-2 text-center text-[11px] md:text-xs font-medium z-0">
                   No Cover
