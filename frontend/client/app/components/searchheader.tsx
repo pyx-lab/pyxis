@@ -110,7 +110,40 @@ function SearchHeaderContent() {
   const urlQuery = searchParams.get("q") || "";
 
   const [isLoading, setIsLoading] = useState(false);
+  const [mobileSearchActive, setMobileSearchActive] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (mobileSearchActive) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileSearchActive]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileSearchActive) {
+        setMobileSearchActive(false);
+      }
+    };
+    window.addEventListener("keydown", handleEscape as any);
+    return () => window.removeEventListener("keydown", handleEscape as any);
+  }, [mobileSearchActive]);
 
   const {
     query,
@@ -124,7 +157,7 @@ function SearchHeaderContent() {
   useEffect(() => {
     setIsLoading(false);
     setShowSuggestions(false);
-  }, [searchParams]);
+  }, [searchParams, setShowSuggestions]);
 
   useEffect(() => {
     const handle = (e: MouseEvent | TouchEvent) => {
@@ -141,7 +174,7 @@ function SearchHeaderContent() {
       document.removeEventListener("mousedown", handle);
       document.removeEventListener("touchstart", handle);
     };
-  }, []);
+  }, [setShowSuggestions]);
 
   const handleSearch = (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
@@ -149,6 +182,7 @@ function SearchHeaderContent() {
     if (q.trim()) {
       setIsLoading(true);
       setShowSuggestions(false);
+      setMobileSearchActive(false);
       router.push(`/search/${activeTab}?q=${encodeURIComponent(q)}`);
       if (q === urlQuery) setTimeout(() => setIsLoading(false), 800);
     }
@@ -177,7 +211,14 @@ function SearchHeaderContent() {
       name: "All",
       path: "text",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
@@ -187,7 +228,14 @@ function SearchHeaderContent() {
       name: "Images",
       path: "image",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
           <circle cx="9" cy="9" r="2" />
           <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
@@ -198,7 +246,14 @@ function SearchHeaderContent() {
       name: "Videos",
       path: "video",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <path d="m22 8-6 4 6 4V8Z" />
           <rect width="14" height="12" x="2" y="6" rx="2" ry="2" />
         </svg>
@@ -208,7 +263,14 @@ function SearchHeaderContent() {
       name: "News",
       path: "news",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
           <path d="M18 14h-8" />
           <path d="M15 18h-5" />
@@ -220,7 +282,14 @@ function SearchHeaderContent() {
       name: "Books",
       path: "book",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
         </svg>
@@ -229,239 +298,430 @@ function SearchHeaderContent() {
   ];
 
   return (
-    <header className="sticky top-0 bg-white/80 backdrop-blur-xl z-50 pt-4 md:pt-6 border-zinc-100 transition-colors shadow-sm">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-
-        <div className="flex md:hidden items-center justify-end mb-3">
-          <Link
-            href="/signin"
-            className="hidden w-8 h-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200 transition-colors shadow-sm"
-            aria-label="Sign In"
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              viewBox="0 0 24 24" 
-              fill="currentColor" 
-              className="w-5 h-5"
+    <>
+      <header className="sticky top-0 bg-white/80 backdrop-blur-xl z-50 pt-4 md:pt-6 border-zinc-100 transition-colors shadow-sm">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-8">
+          <div className="flex md:hidden items-center justify-end mb-3">
+            <Link
+              href="/signin"
+              className="hidden w-8 h-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200 transition-colors shadow-sm"
+              aria-label="Sign In"
             >
-              <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
-            </svg>
-          </Link>
-        </div>
-        
-        <div className="hidden md:flex items-center justify-between mb-4 md:mb-0 md:absolute md:inset-x-0 md:top-6 md:px-8 pointer-events-none">
-          <Link href="/" className="shrink-0 pointer-events-auto">
-            <Image
-              src="/images/pyxis.svg"
-              alt="Pyxis"
-              width={90}
-              height={30}
-              className="w-[80px] h-auto md:w-[105px]"
-              priority
-            />
-          </Link>
-          <Link
-            href="/signin"
-            className="hidden px-5 py-2.5 bg-zinc-900 text-white rounded-full text-sm font-medium hover:bg-zinc-800 transition-colors pointer-events-auto shadow-sm"
-          >
-            Sign In
-          </Link>
-        </div>
-
-        <div className="flex pb-4 md:pb-5">
-          <div
-            ref={containerRef}
-            className="w-full md:max-w-[680px] relative md:mt-0 md:ml-[110px] lg:ml-0 transition-all"
-          >
-            <form
-              onSubmit={handleSearch}
-              className="relative w-full group"
-            >
-              <Link
-                href="/" 
-                className="absolute left-[18px] top-1/2 -translate-y-1/2 md:hidden z-20 flex items-center"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5"
               >
-                <Image
-                  src="/images/pyxis.svg"
-                  alt="Pyxis"
-                  width={60}
-                  height={20}
-                  className="w-[56px] h-auto object-contain opacity-90"
-                  priority
+                <path
+                  fillRule="evenodd"
+                  d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
+                  clipRule="evenodd"
                 />
-              </Link>
+              </svg>
+            </Link>
+          </div>
 
-              <input
-                type="text"
-                readOnly
-                value={ghostText}
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-12 pl-[84px] md:pl-6 pr-12 rounded-full border border-transparent bg-transparent text-[15px] text-zinc-400 pointer-events-none z-0"
+          <div className="hidden md:flex items-center justify-between mb-4 md:mb-0 md:absolute md:inset-x-0 md:top-6 md:px-8 pointer-events-none">
+            <Link href="/" className="shrink-0 pointer-events-auto">
+              <Image
+                src="/images/pyxis.svg"
+                alt="Pyxis"
+                width={90}
+                height={30}
+                className="w-[80px] h-auto md:w-[105px]"
+                priority
               />
-              
-              <input
-                type="text"
-                id="search-input-header"
-                name="q"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setShowSuggestions(true);
+            </Link>
+            <Link
+              href="/signin"
+              className="hidden px-5 py-2.5 bg-zinc-900 text-white rounded-full text-sm font-medium hover:bg-zinc-800 transition-colors pointer-events-auto shadow-sm"
+            >
+              Sign In
+            </Link>
+          </div>
+
+          <div className="flex pb-4 md:pb-5">
+            <div
+              ref={containerRef}
+              className="w-full md:max-w-[680px] relative md:mt-0 md:ml-[110px] lg:ml-0 transition-all"
+            >
+              <form onSubmit={handleSearch} className="relative w-full group">
+                <Link
+                  href="/"
+                  className="absolute left-[18px] top-1/2 -translate-y-1/2 md:hidden z-20 flex items-center"
+                >
+                  <Image
+                    src="/images/pyxis.svg"
+                    alt="Pyxis"
+                    width={60}
+                    height={20}
+                    className="w-[56px] h-auto object-contain opacity-90"
+                    priority
+                  />
+                </Link>
+
+                <input
+                  type="text"
+                  readOnly
+                  value={ghostText}
+                  aria-hidden="true"
+                  className="absolute inset-0 w-full h-12 pl-[84px] md:pl-6 pr-12 rounded-full border border-transparent bg-transparent text-[15px] text-zinc-400 pointer-events-none z-0"
+                />
+
+                <input
+                  type="text"
+                  id="search-input-header"
+                  name="q"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => {
+                    if (isMobile) {
+                      setMobileSearchActive(true);
+                      setTimeout(() => mobileInputRef.current?.focus(), 50);
+                    } else {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  className="relative z-10 w-full h-12 pl-[84px] md:pl-6 pr-14 rounded-full border border-zinc-300 bg-zinc-50/50 text-[15px] text-zinc-900 placeholder-zinc-500 shadow-sm transition-all duration-300 focus:outline-none focus:bg-white focus:border-zinc-100 focus:shadow-md hover:bg-white hover:border-zinc-300"
+                  placeholder="Search Pyxis..."
+                  autoComplete="off"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1 top-1 bottom-1 w-12 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-full transition-all z-20"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                    stroke="currentColor"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                    />
+                  </svg>
+                </button>
+              </form>
+
+              {!isMobile && (
+                <AnimatePresence>
+                  {showSuggestions &&
+                    (suggestions.length > 0 || richSuggestions.length > 0) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute top-14 left-0 w-full bg-white rounded-3xl shadow-xl border border-zinc-100/80 overflow-hidden z-30 py-3"
+                      >
+                        {richSuggestions.map((item, i) => (
+                          <div
+                            key={`rich-${i}`}
+                            onClick={() => {
+                              setQuery(item.title);
+                              handleSearch(undefined, item.title);
+                            }}
+                            className="px-5 py-3 hover:bg-zinc-50/80 cursor-pointer flex items-center gap-4 transition-colors group"
+                          >
+                            <div className="shrink-0 w-11 h-11 rounded-xl bg-zinc-100 overflow-hidden border border-zinc-100">
+                              {item.thumbnail ? (
+                                <img
+                                  src={item.thumbnail}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                                  <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-zinc-900 font-semibold text-[15px] truncate">
+                                {item.title}
+                              </span>
+                              <span className="text-zinc-500 text-xs truncate">
+                                {item.description}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+
+                        {richSuggestions.length > 0 &&
+                          suggestions.length > 0 && (
+                            <div className="h-px w-full bg-zinc-100 my-1" />
+                          )}
+
+                        {suggestions.map((s, i) => (
+                          <div
+                            key={i}
+                            onClick={() => {
+                              setQuery(s);
+                              handleSearch(undefined, s);
+                            }}
+                            className="px-6 py-2.5 hover:bg-zinc-50 cursor-pointer flex items-center gap-4 transition-colors"
+                          >
+                            <svg
+                              className="w-4 h-4 text-zinc-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2.5}
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                              />
+                            </svg>
+                            <span className="text-zinc-800 text-[15px]">
+                              <span className="font-semibold text-zinc-950">
+                                {s.substring(0, query.length)}
+                              </span>
+                              {s.substring(query.length)}
+                            </span>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                </AnimatePresence>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0 md:ml-[110px] lg:ml-0 transition-all">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.path;
+              return (
+                <Link
+                  key={tab.path}
+                  href={
+                    query.trim()
+                      ? `/search/${tab.path}?q=${encodeURIComponent(query)}`
+                      : "#"
+                  }
+                  onClick={(e) => {
+                    if (!query.trim()) {
+                      e.preventDefault();
+                      return;
+                    }
+                    if (!isActive) setIsLoading(true);
+                  }}
+                  className={`relative px-4 py-3 text-[14px] font-medium transition-all duration-200 ease-out select-none whitespace-nowrap rounded-t-xl ${isActive ? "text-zinc-700" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50/80"}`}
+                >
+                  <span
+                    className={`flex items-center gap-2 ${!query.trim() && !isActive ? "opacity-40 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={isActive ? "text-zinc-700" : "text-zinc-400"}
+                    >
+                      {tab.icon}
+                    </span>
+                    <span>{tab.name}</span>
+                  </span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTabIndicator"
+                      className="absolute bottom-0 left-0 w-full h-[3.5px] bg-zinc-900 rounded-t-full"
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {isLoading && (
+          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-zinc-100 overflow-hidden z-50">
+            <motion.div
+              className="h-full bg-zinc-900"
+              initial={{ x: "-100%", width: "50%" }}
+              animate={{ x: "200%", width: "50%" }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+            />
+          </div>
+        )}
+      </header>
+
+      {isMobile && mobileSearchActive && (
+        <div
+          className="fixed inset-0 bg-white z-[100] flex flex-col"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setMobileSearchActive(false);
+          }}
+        >
+          <div className="sticky top-0 bg-white border-b border-zinc-100 px-4 py-3 flex items-center gap-3 shadow-sm">
+            <button
+              onClick={() => setMobileSearchActive(false)}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors"
+            >
+              <svg
+                className="w-6 h-6 text-zinc-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <div className="flex-1 relative">
+              <form onSubmit={handleSearch} className="w-full">
+                <input
+                  ref={mobileInputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  className="w-full h-12 px-4 pr-12 rounded-full border border-zinc-200 bg-zinc-50 text-[16px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-300 focus:bg-white shadow-sm"
+                  placeholder="Search Pyxis..."
+                  autoFocus
+                  autoComplete="off"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-zinc-700"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto py-2">
+            {richSuggestions.map((item, i) => (
+              <div
+                key={`mobile-rich-${i}`}
+                onClick={() => {
+                  setQuery(item.title);
+                  handleSearch(undefined, item.title);
                 }}
-                onFocus={() => setShowSuggestions(true)}
-                onKeyDown={handleKeyDown}
-                className="relative z-10 w-full h-12 pl-[84px] md:pl-6 pr-14 rounded-full border border-zinc-300 bg-zinc-50/50 text-[15px] text-zinc-900 placeholder-zinc-500 shadow-sm transition-all duration-300 focus:outline-none focus:bg-white focus:border-zinc-100 focus:shadow-md hover:bg-white hover:border-zinc-300"
-                placeholder="Search Pyxis..."
-                autoComplete="off"
-              />
-              <button
-                type="submit"
-                className="absolute right-1 top-1 bottom-1 w-12 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-full transition-all z-20"
+                className="px-4 py-3 flex items-center gap-3 hover:bg-zinc-50 active:bg-zinc-100 transition-colors cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-xl bg-zinc-100 overflow-hidden flex-shrink-0">
+                  {item.thumbnail ? (
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="text-zinc-900 font-medium text-[15px]">
+                    {item.title}
+                  </div>
+                  <div className="text-zinc-500 text-xs truncate">
+                    {item.description}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {richSuggestions.length > 0 && suggestions.length > 0 && (
+              <div className="h-px bg-zinc-100 my-2 mx-4" />
+            )}
+            {suggestions.map((s, i) => (
+              <div
+                key={`mobile-suggest-${i}`}
+                onClick={() => {
+                  setQuery(s);
+                  handleSearch(undefined, s);
+                }}
+                className="px-4 py-3 flex items-center gap-3 hover:bg-zinc-50 active:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5 text-zinc-400"
                   fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
                   stroke="currentColor"
-                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
-              </button>
-            </form>
-
-            <AnimatePresence>
-              {showSuggestions &&
-                (suggestions.length > 0 || richSuggestions.length > 0) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                    transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute top-14 left-0 w-full bg-white rounded-3xl shadow-xl border border-zinc-100/80 overflow-hidden z-30 py-3"
-                  >
-                    {richSuggestions.map((item, i) => (
-                      <div
-                        key={`rich-${i}`}
-                        onClick={() => {
-                          setQuery(item.title);
-                          handleSearch(undefined, item.title);
-                        }}
-                        className="px-5 py-3 hover:bg-zinc-50/80 cursor-pointer flex items-center gap-4 transition-colors group"
-                      >
-                        <div className="shrink-0 w-11 h-11 rounded-xl bg-zinc-100 overflow-hidden border border-zinc-100">
-                          {item.thumbnail ? (
-                            <img
-                              src={item.thumbnail}
-                              alt={item.title}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-300">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-zinc-900 font-semibold text-[15px] truncate">
-                            {item.title}
-                          </span>
-                          <span className="text-zinc-500 text-xs truncate">
-                            {item.description}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {richSuggestions.length > 0 && suggestions.length > 0 && (
-                       <div className="h-px w-full bg-zinc-100 my-1" />
-                    )}
-
-                    {suggestions.map((s, i) => (
-                      <div
-                        key={i}
-                        onClick={() => {
-                          setQuery(s);
-                          handleSearch(undefined, s);
-                        }}
-                        className="px-6 py-2.5 hover:bg-zinc-50 cursor-pointer flex items-center gap-4 transition-colors"
-                      >
-                        <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <span className="text-zinc-800 text-[15px]">
-                          <span className="font-semibold text-zinc-950">
-                            {s.substring(0, query.length)}
-                          </span>
-                          {s.substring(query.length)}
-                        </span>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-            </AnimatePresence>
+                <span className="text-zinc-800 text-[15px] flex-1">
+                  <span className="font-medium text-zinc-950">
+                    {s.substring(0, query.length)}
+                  </span>
+                  {s.substring(query.length)}
+                </span>
+              </div>
+            ))}
+            {suggestions.length === 0 &&
+              richSuggestions.length === 0 &&
+              query.trim().length >= 2 && (
+                <div className="px-4 py-8 text-center text-zinc-400 text-sm">
+                  No suggestions found
+                </div>
+              )}
           </div>
         </div>
-      </div>
-
-      <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8">
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0 md:ml-[110px] lg:ml-0 transition-all">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.path;
-            return (
-              <Link
-                key={tab.path}
-                href={
-                  query.trim()
-                    ? `/search/${tab.path}?q=${encodeURIComponent(query)}`
-                    : "#"
-                }
-                onClick={(e) => {
-                  if (!query.trim()) {
-                    e.preventDefault();
-                    return;
-                  }
-                  if (!isActive) setIsLoading(true);
-                }}
-                className={`relative px-4 py-3 text-[14px] font-medium transition-all duration-200 ease-out select-none whitespace-nowrap rounded-t-xl ${isActive ? "text-zinc-700" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50/80"}`}
-              >
-                <span className={`flex items-center gap-2 ${!query.trim() && !isActive ? "opacity-40 cursor-not-allowed" : ""}`}>
-                  <span className={isActive ? "text-zinc-700" : "text-zinc-400"}>
-                    {tab.icon}
-                  </span>
-                  <span>{tab.name}</span>
-                </span>
-                {isActive && (
-                  <motion.div 
-                    layoutId="activeTabIndicator"
-                    className="absolute bottom-0 left-0 w-full h-[3.5px] bg-zinc-900 rounded-t-full"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {isLoading && (
-        <div className="absolute bottom-0 left-0 w-full h-[2px] bg-zinc-100 overflow-hidden z-50">
-          <motion.div
-            className="h-full bg-zinc-900"
-            initial={{ x: "-100%", width: "50%" }}
-            animate={{ x: "200%", width: "50%" }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-          />
-        </div>
       )}
-    </header>
+    </>
   );
 }
 

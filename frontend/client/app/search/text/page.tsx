@@ -16,7 +16,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   };
 }
 
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_URL_BACKEND_API || "http://localhost:5000";
 
 export default async function TextSearchPage(props: PageProps) {
   const searchParams = await props.searchParams;

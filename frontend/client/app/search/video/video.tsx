@@ -90,79 +90,24 @@ export default function VideoResultsList({
             width: "100%",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div className="flex flex-col">
             <HeroCard item={heroVideo} index={0} />
           </div>
 
-          <div
-            style={{
-              backgroundColor: "#f4f4f5",
-              borderRadius: "18px",
-              padding: "1.25rem",
-              display: "flex",
-              flexDirection: "column",
-              border: "1px solid #f4f4f5",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            }}
-          >
-            <h3
-              style={{
-                fontWeight: 600,
-                color: "#18181b",
-                fontSize: "20px",
-                marginBottom: "1rem",
-              }}
-            >
+          <div className="bg-zinc-100 border border-zinc-100/40 rounded-3xl p-5 flex flex-col">
+            <h3 className="text-xl font-semibold text-zinc-900 mb-4">
               Top Results
             </h3>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-                flexGrow: 1,
-                justifyContent: "flex-start",
-              }}
-            >
+            <div className="flex flex-col gap-2 flex-grow">
               {listVideos.map((item, idx) => (
                 <ListCard key={idx} item={item} index={idx + 1} />
               ))}
             </div>
           </div>
 
-          <div
-            style={{
-              backgroundColor: "#f4f4f5",
-              borderRadius: "18px",
-              padding: "1.25rem",
-              display: "flex",
-              flexDirection: "column",
-              border: "1px solid #f4f4f5",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "1rem",
-              }}
-            >
-              <h3
-                style={{ fontWeight: 600, color: "#18181b", fontSize: "20px" }}
-              >
-                Shorts
-              </h3>
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "0.75rem",
-                height: "100%",
-              }}
-            >
+          <div className="bg-zinc-100 border border-zinc-100/40 rounded-3xl p-5 flex flex-col">
+            <h3 className="text-xl font-semibold text-zinc-900 mb-4">Shorts</h3>
+            <div className="grid grid-cols-2 gap-3 h-full">
               {shortsVideos.map((item, idx) => (
                 <ShortCard key={idx} item={item} index={idx + 4} />
               ))}
@@ -216,17 +161,7 @@ function HeroCard({
       href={item.content}
       target="_blank"
       rel="noopener noreferrer"
-      className="group hover:shadow-md transition-shadow"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        backgroundColor: "#f4f4f5",
-        borderRadius: "16px",
-        overflow: "hidden",
-        border: "1px solid #f4f4f5",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-      }}
+      className="group flex flex-col h-full bg-zinc-100 border border-zinc-100/40 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200"
     >
       <div
         style={{
@@ -274,45 +209,14 @@ function HeroCard({
         )}
       </div>
 
-      <div
-        style={{
-          padding: "1rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-          flexGrow: 1,
-        }}
-      >
-        <h2
-          className="group-hover:text-zinc-600 transition-colors"
-          style={{
-            fontSize: "18px",
-            fontWeight: 700,
-            color: "#18181b",
-            lineHeight: "1.2",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
+      <div className="p-4 flex flex-col gap-2 flex-grow">
+        <h2 className="text-lg font-bold text-zinc-900 leading-snug line-clamp-2 group-hover:text-zinc-600 transition-colors">
           {item.title}
         </h2>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            fontSize: "12px",
-            fontWeight: 500,
-            color: "#71717a",
-            marginTop: "auto",
-            paddingTop: "0.5rem",
-          }}
-        >
+        <div className="flex items-center gap-2 text-xs font-medium text-zinc-500 mt-auto pt-2">
           <img
             src={`https://www.google.com/s2/favicons?domain=${new URL(item.content || "https://youtube.com").hostname}&sz=32`}
-            style={{ width: "16px", height: "16px", borderRadius: "50%" }}
+            className="w-4 h-4 rounded-full"
             alt="icon"
             onError={(e) => (e.currentTarget.style.display = "none")}
           />
@@ -337,28 +241,9 @@ function ListCard({
       href={item.content}
       target="_blank"
       rel="noopener noreferrer"
-      className="group"
-      style={{
-        display: "flex",
-        gap: "0.75rem",
-        alignItems: "flex-start",
-        backgroundColor: "#f4f4f5",
-        border: "0.5px solid #f4f4f5",
-        borderRadius: "18px",
-        padding: "0.5rem",
-      }}
+      className="group flex gap-3 items-start bg-zinc-100 border border-zinc-100/40 rounded-3xl p-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200"
     >
-      <div
-        style={{
-          position: "relative",
-          width: "140px", 
-          flexShrink: 0,
-          aspectRatio: "16 / 9",
-          backgroundColor: "transparent",
-          borderRadius: "8px",
-          overflow: "hidden",
-        }}
-      >
+      <div className="relative w-[140px] shrink-0 aspect-video rounded-xl overflow-hidden bg-transparent">
         <img
           src={getThumbnail(item)}
           alt=""
@@ -369,15 +254,7 @@ function ListCard({
         <img
           src={getThumbnail(item)}
           alt={item.title}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            zIndex: 10,
-          }}
+          className="absolute inset-0 w-full h-full object-cover z-10"
           loading="lazy"
           fetchPriority={index < 3 ? "high" : "auto"}
           onError={handleImageError}
@@ -391,39 +268,11 @@ function ListCard({
           </div>
         )}
       </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.25rem",
-          flexGrow: 1,
-          minWidth: 0,
-        }}
-      >
-        <h4
-          className="group-hover:text-zinc-600"
-          style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "#18181b",
-            lineHeight: "1.3",
-            display: "-webkit-box",
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
+      <div className="flex flex-col gap-1 flex-grow min-w-0">
+        <h4 className="text-[13px] font-semibold text-zinc-900 leading-snug line-clamp-3 group-hover:text-zinc-600 transition-colors">
           {item.title}
         </h4>
-        <span
-          style={{
-            fontSize: "11px",
-            color: "#71717a",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
+        <span className="text-[11px] text-zinc-500 truncate">
           {item.publisher || "Source"}{" "}
           {item.statistics?.viewCount
             ? `• ${formatViews(item.statistics.viewCount)}`
@@ -446,16 +295,8 @@ function ShortCard({
       href={item.content}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block"
-      style={{
-        position: "relative",
-        width: "100%",
-        paddingTop: "177.77%",
-        backgroundColor: "#18181b",
-        borderRadius: "12px",
-        overflow: "hidden",
-        border: "none",
-      }}
+      className="group block relative w-full bg-zinc-900 rounded-3xl overflow-hidden"
+      style={{ paddingTop: "177.77%" }}
     >
       <img
         src={getThumbnail(item)}
@@ -524,25 +365,9 @@ function StandardCard({
       href={item.content}
       target="_blank"
       rel="noopener noreferrer"
-      className="group w-full"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-        border: "none",
-      }}
+      className="group w-full flex flex-col bg-zinc-100 border border-zinc-100/40 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200"
     >
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          aspectRatio: "16 / 9",
-          backgroundColor: "transparent",
-          borderRadius: "12px",
-          overflow: "hidden",
-          border: "1px solid #f4f4f5",
-        }}
-      >
+      <div className="relative w-full aspect-video overflow-hidden">
         <img
           src={getThumbnail(item)}
           alt=""
@@ -553,16 +378,7 @@ function StandardCard({
         <img
           src={getThumbnail(item)}
           alt={item.title}
-          className="transition-transform duration-300 group-hover:scale-105"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            zIndex: 10,
-          }}
+          className="absolute inset-0 w-full h-full object-cover z-10 transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
           fetchPriority={index < 8 ? "high" : "auto"}
           onError={handleImageError}
@@ -578,64 +394,18 @@ function StandardCard({
           </div>
         )}
       </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.25rem",
-          padding: "0 0.25rem",
-          minWidth: 0,
-        }}
-      >
-        <h3
-          className="group-hover:text-zinc-600 transition-colors"
-          style={{
-            fontSize: "14px",
-            fontWeight: 600,
-            color: "#18181b",
-            lineHeight: "1.2",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
+      <div className="flex flex-col gap-1 px-3 py-3 min-w-0">
+        <h3 className="text-sm font-semibold text-zinc-900 leading-snug line-clamp-2 group-hover:text-zinc-600 transition-colors">
           {item.title}
         </h3>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: "0.25rem",
-            fontSize: "12px",
-            color: "#71717a",
-            marginTop: "2px",
-          }}
-        >
+        <div className="flex flex-wrap items-center gap-1 text-xs text-zinc-500 mt-0.5">
           {item.publisher && (
-            <span
-              style={{
-                fontWeight: 500,
-                color: "#52525b",
-                maxWidth: "100px",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
+            <span className="font-medium text-zinc-600 max-w-[100px] truncate">
               {item.publisher}
             </span>
           )}
           {(item.statistics?.viewCount || item.published) && (
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "0.25rem",
-              }}
-            >
+            <span className="flex items-center flex-wrap gap-1">
               {item.publisher && <span>•</span>}
               {formatViews(item.statistics?.viewCount)}
               {item.statistics?.viewCount && item.published && <span>•</span>}

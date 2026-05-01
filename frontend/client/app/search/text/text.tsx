@@ -21,6 +21,8 @@ const itemVariants: Variants = {
   }),
 };
 
+const animatedResultSets = new Set<string>();
+
 export default function TextResultsList({ results }: TextResultsListProps) {
   if (!results || results.length === 0) {
     return (
@@ -29,6 +31,10 @@ export default function TextResultsList({ results }: TextResultsListProps) {
       </div>
     );
   }
+
+  const resultKey = results[0]?.href ?? "";
+  const shouldAnimate = !animatedResultSets.has(resultKey);
+  if (shouldAnimate) animatedResultSets.add(resultKey);
 
   return (
     <div className="flex flex-col gap-6 max-w-[780px]">
@@ -49,7 +55,7 @@ export default function TextResultsList({ results }: TextResultsListProps) {
             key={uniqueKey}
             variants={itemVariants}
             custom={index}
-            initial="hidden"
+            initial={shouldAnimate ? "hidden" : "visible"}
             animate="visible"
             className="group flex flex-col gap-3 bg-zinc-100 border border-zinc-100/40 rounded-3xl px-5 py-[16px] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200 relative z-0 hover:z-10"
           >
