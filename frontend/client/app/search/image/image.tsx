@@ -36,25 +36,13 @@ export default function ImageResultsList({
     const update = () => {
       const w = window.innerWidth;
       setNumCols(
-        isOpen
-          ? w >= 1024
-            ? 4
-            : w >= 640
-              ? 3
-              : 2
-          : w >= 1024
-            ? 5
-            : w >= 768
-              ? 4
-              : w >= 640
-                ? 3
-                : 2,
+        w >= 1024 ? 5 : w >= 768 ? 4 : w >= 640 ? 3 : 2,
       );
     };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [isOpen]);
+  }, []);
 
   const columns = useMemo(() => {
     const cols: { item: ImageSearchResultItem; index: number }[][] = Array.from(
@@ -92,15 +80,10 @@ export default function ImageResultsList({
   useEffect(() => {
     if (selectedIndex === null && prevSelectedIndex.current !== null) {
       const lastIndex = prevSelectedIndex.current;
-      const timeout = setTimeout(() => {
-        const card = cardRefs.current.get(lastIndex);
-        if (card) {
-          scrollToCard(card);
-          card.focus();
-        }
-        prevSelectedIndex.current = null;
+      setTimeout(() => {
+        cardRefs.current.get(lastIndex)?.focus();
       }, 300);
-      return () => clearTimeout(timeout);
+      prevSelectedIndex.current = null;
     }
   }, [selectedIndex]);
 
@@ -308,6 +291,12 @@ export function SidePanel({
     ? fullImageDimensions.height > fullImageDimensions.width
     : false;
 
+  const [blurReady, setBlurReady] = useState(false);
+
+  useEffect(() => {
+    setBlurReady(false);
+  }, [index]);
+
   const [headerH, setHeaderH] = useState(0);
   useEffect(() => {
     if (isMobile) return;
@@ -338,9 +327,10 @@ export function SidePanel({
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 28, stiffness: 220 }}
+        transition={{ type: "tween", duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        onAnimationComplete={() => setBlurReady(true)}
         className="fixed inset-0 z-[60] bg-white flex flex-col"
-        style={{ touchAction: "none" }}
+        style={{ touchAction: "none", willChange: "transform" }}
       >
         <div className="flex items-center justify-between px-4 py-3 shrink-0 border-b border-gray-100">
           <div className="flex items-center gap-1 bg-white rounded-full p-1 shadow-sm border border-gray-200">
@@ -415,12 +405,12 @@ export function SidePanel({
                   if (!isPortrait) {
                     return (
                       <div className="relative w-full h-full overflow-hidden">
-                        <div
-                          className="absolute inset-0 w-full h-full bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
-                          style={{
-                            backgroundImage: `url(${immediateImageUrl})`,
-                          }}
-                        />
+                        {blurReady && (
+                          <div
+                            className="absolute inset-0 w-full h-full bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                            style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                          />
+                        )}
                         <img
                           src={immediateImageUrl}
                           alt={item.title}
@@ -434,12 +424,9 @@ export function SidePanel({
                             decoding="async"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.35, ease: "easeOut" }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
                             className="absolute top-0 left-0 w-auto h-full max-w-full object-contain z-20 mx-auto"
-                            style={{
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                            }}
+                            style={{ left: "50%", transform: "translateX(-50%)" }}
                           />
                         )}
                       </div>
@@ -447,12 +434,12 @@ export function SidePanel({
                   } else {
                     return (
                       <div className="flex items-stretch justify-center w-full h-full">
-                        <div
-                          className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
-                          style={{
-                            backgroundImage: `url(${immediateImageUrl})`,
-                          }}
-                        />
+                        {blurReady && (
+                          <div
+                            className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                            style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                          />
+                        )}
                         <div className="flex items-center justify-center h-full relative">
                           <img
                             src={immediateImageUrl}
@@ -467,17 +454,17 @@ export function SidePanel({
                               decoding="async"
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
-                              transition={{ duration: 0.35, ease: "easeOut" }}
+                              transition={{ duration: 0.2, ease: "easeOut" }}
                               className="absolute top-0 left-0 h-full w-auto object-contain z-10"
                             />
                           )}
                         </div>
-                        <div
-                          className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
-                          style={{
-                            backgroundImage: `url(${immediateImageUrl})`,
-                          }}
-                        />
+                        {blurReady && (
+                          <div
+                            className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                            style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                          />
+                        )}
                       </div>
                     );
                   }
@@ -555,9 +542,10 @@ export function SidePanel({
       initial={{ x: "100%", opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: "100%", opacity: 0 }}
-      transition={{ type: "spring", damping: 25, stiffness: 200 }}
+      transition={{ type: "tween", duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+      onAnimationComplete={() => setBlurReady(true)}
       className="fixed right-0 top-[var(--header-h)] bottom-0 w-[488px] bg-white shadow-2xl flex flex-col z-40 overflow-hidden border-l border-gray-200"
-      style={{ "--header-h": `${headerH}px` } as React.CSSProperties}
+      style={{ "--header-h": `${headerH}px`, willChange: "transform, opacity" } as React.CSSProperties}
     >
       <div className="flex items-center justify-between px-4 py-4 shrink-0 z-10 border-b border-gray-100">
         <div className="flex items-center gap-1 bg-white rounded-full p-1 shadow-sm border border-gray-200">
@@ -632,10 +620,12 @@ export function SidePanel({
                 if (!isPortrait) {
                   return (
                     <div className="relative w-full h-full overflow-hidden">
-                      <div
-                        className="absolute inset-0 w-full h-full bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
-                        style={{ backgroundImage: `url(${immediateImageUrl})` }}
-                      />
+                      {blurReady && (
+                        <div
+                          className="absolute inset-0 w-full h-full bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                          style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                        />
+                      )}
                       <img
                         src={immediateImageUrl}
                         alt={item.title}
@@ -649,7 +639,7 @@ export function SidePanel({
                           decoding="async"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ duration: 0.35, ease: "easeOut" }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
                           className="absolute top-0 left-0 w-auto h-full max-w-full object-contain z-20 mx-auto"
                           style={{ left: "50%", transform: "translateX(-50%)" }}
                         />
@@ -659,10 +649,12 @@ export function SidePanel({
                 } else {
                   return (
                     <div className="flex items-stretch justify-center w-full h-full">
-                      <div
-                        className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
-                        style={{ backgroundImage: `url(${immediateImageUrl})` }}
-                      />
+                      {blurReady && (
+                        <div
+                          className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                          style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                        />
+                      )}
                       <div className="flex items-center justify-center h-full relative">
                         <img
                           src={immediateImageUrl}
@@ -677,15 +669,17 @@ export function SidePanel({
                             decoding="async"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.35, ease: "easeOut" }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
                             className="absolute top-0 left-0 h-full w-auto object-contain z-10"
                           />
                         )}
                       </div>
-                      <div
-                        className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
-                        style={{ backgroundImage: `url(${immediateImageUrl})` }}
-                      />
+                      {blurReady && (
+                        <div
+                          className="flex-1 bg-center bg-no-repeat bg-cover blur-2xl scale-125 opacity-80"
+                          style={{ backgroundImage: `url(${immediateImageUrl})` }}
+                        />
+                      )}
                     </div>
                   );
                 }
