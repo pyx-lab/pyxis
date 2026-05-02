@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAutocomplete } from "./searchheader";
+import { getRecaptchaToken } from "@/lib/recaptcha";
 
 interface HomeSearchBarProps {
   searchMode?: string;
@@ -108,14 +109,18 @@ export default function HomeSearchBar({
     };
   }, [setShowSuggestions]);
 
-  const handleSearch = (e?: React.FormEvent, overrideQuery?: string) => {
+  const handleSearch = async (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
     const q = overrideQuery || query;
     if (q.trim()) {
       setIsLoading(true);
       setShowSuggestions(false);
       setMobileSearchActive(false);
-      router.push(`/search/${searchMode}?q=${encodeURIComponent(q)}`);
+
+      const token = await getRecaptchaToken();
+      const params = new URLSearchParams({ q });
+      if (token) params.append("g-recaptcha-response", token);
+      router.push(`/search/${searchMode}?${params.toString()}`);
     }
   };
 

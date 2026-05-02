@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { getRecaptchaToken } from "@/lib/recaptcha";
 
 export interface RichSuggestion {
   title: string;
@@ -176,16 +177,30 @@ function SearchHeaderContent() {
     };
   }, [setShowSuggestions]);
 
-  const handleSearch = (e?: React.FormEvent, overrideQuery?: string) => {
+  const handleSearch = async (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
     const q = overrideQuery || query;
     if (q.trim()) {
       setIsLoading(true);
       setShowSuggestions(false);
       setMobileSearchActive(false);
-      router.push(`/search/${activeTab}?q=${encodeURIComponent(q)}`);
+
+      const token = await getRecaptchaToken();
+      const params = new URLSearchParams({ q });
+      if (token) params.append("g-recaptcha-response", token);
+      router.push(`/search/${activeTab}?${params.toString()}`);
+
       if (q === urlQuery) setTimeout(() => setIsLoading(false), 800);
     }
+  };
+
+  const handleTabChange = async (tabPath: string, isActive: boolean) => {
+    if (!query.trim() || isActive) return;
+    setIsLoading(true);
+    const token = await getRecaptchaToken();
+    const params = new URLSearchParams({ q: query });
+    if (token) params.append("g-recaptcha-response", token);
+    router.push(`/search/${tabPath}?${params.toString()}`);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -366,6 +381,8 @@ function SearchHeaderContent() {
                   readOnly
                   value={ghostText}
                   aria-hidden="true"
+                  id="search-ghost-input"
+                  name="ghost"
                   className="absolute inset-0 w-full h-12 pl-[84px] md:pl-6 pr-12 rounded-full border border-transparent bg-transparent text-[15px] text-zinc-400 pointer-events-none z-0"
                 />
 
@@ -516,25 +533,17 @@ function SearchHeaderContent() {
             {tabs.map((tab) => {
               const isActive = activeTab === tab.path;
               return (
-                <Link
+                <button
                   key={tab.path}
-                  href={
-                    query.trim()
-                      ? `/search/${tab.path}?q=${encodeURIComponent(query)}`
-                      : "#"
-                  }
-                  onClick={(e) => {
-                    if (!query.trim()) {
-                      e.preventDefault();
-                      return;
-                    }
-                    if (!isActive) setIsLoading(true);
-                  }}
-                  className={`relative px-4 py-3 text-[14px] font-medium transition-all duration-200 ease-out select-none whitespace-nowrap rounded-t-xl ${isActive ? "text-zinc-700" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50/80"}`}
+                  onClick={() => handleTabChange(tab.path, isActive)}
+                  disabled={!query.trim() || isActive}
+                  className={`relative px-4 py-3 text-[14px] font-medium transition-all duration-200 ease-out select-none whitespace-nowrap rounded-t-xl ${
+                    isActive
+                      ? "text-zinc-700"
+                      : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50/80"
+                  } ${!query.trim() || isActive ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
                 >
-                  <span
-                    className={`flex items-center gap-2 ${!query.trim() && !isActive ? "opacity-40 cursor-not-allowed" : ""}`}
-                  >
+                  <span className="flex items-center gap-2">
                     <span
                       className={isActive ? "text-zinc-700" : "text-zinc-400"}
                     >
@@ -553,7 +562,7 @@ function SearchHeaderContent() {
                       }}
                     />
                   )}
-                </Link>
+                </button>
               );
             })}
           </div>
@@ -601,6 +610,8 @@ function SearchHeaderContent() {
               <form onSubmit={handleSearch} className="w-full">
                 <input
                   ref={mobileInputRef}
+                  id="mobile-search-input"
+                  name="q"
                   type="text"
                   value={query}
                   onChange={(e) => {
