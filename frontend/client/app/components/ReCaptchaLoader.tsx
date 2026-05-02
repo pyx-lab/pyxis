@@ -1,38 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 interface ReCaptchaLoaderProps {
   siteKey: string;
 }
 
 export default function ReCaptchaLoader({ siteKey }: ReCaptchaLoaderProps) {
-  const [showBadge, setShowBadge] = useState(false);
-
   useEffect(() => {
-    const handleInteraction = () => setShowBadge(true);
-    document.addEventListener("focusin", handleInteraction);
-    return () => document.removeEventListener("focusin", handleInteraction);
-  }, []);
-
-  useEffect(() => {
-    const scriptId = "recaptcha-script";
+    const scriptId = "recaptcha-v3-script";
     if (document.getElementById(scriptId)) return;
 
     const script = document.createElement("script");
-    script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
     script.id = scriptId;
     script.async = true;
-    script.onload = () => {
-      window.grecaptcha.ready(() => {
-        window.grecaptcha.render("recaptcha-badge", {
-          sitekey: siteKey,
-          badge: "inline",
-        });
-      });
-    };
+    script.defer = true;
     document.body.appendChild(script);
   }, [siteKey]);
 
-  return <div id="recaptcha-badge" className={showBadge ? "" : "hidden"} />;
+  return null;
 }
