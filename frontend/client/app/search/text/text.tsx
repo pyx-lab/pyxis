@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { motion, Variants } from "framer-motion";
 import type { TextSearchResultItem } from "../../types";
 
@@ -21,9 +22,19 @@ const itemVariants: Variants = {
   }),
 };
 
-const animatedResultSets = new Set<string>();
-
 export default function TextResultsList({ results }: TextResultsListProps) {
+  const [animEpoch, setAnimEpoch] = useState(0);
+  const prevResultKey = useRef<string>("");
+
+  const resultKey = results[0]?.href ?? "";
+
+  useEffect(() => {
+    if (prevResultKey.current !== resultKey) {
+      prevResultKey.current = resultKey;
+      setAnimEpoch((e) => e + 1);
+    }
+  }, [resultKey]);
+
   if (!results || results.length === 0) {
     return (
       <div className="p-10 text-center text-zinc-500 text-sm bg-zinc-50 rounded-2xl border border-zinc-100/40 max-w-[680px]">
@@ -32,14 +43,10 @@ export default function TextResultsList({ results }: TextResultsListProps) {
     );
   }
 
-  const resultKey = results[0]?.href ?? "";
-  const shouldAnimate = !animatedResultSets.has(resultKey);
-  if (shouldAnimate) animatedResultSets.add(resultKey);
-
   return (
     <div className="flex flex-col gap-6 max-w-[780px]">
       {results.map((item, index) => {
-        const uniqueKey = `${item.href}-${index}`;
+        const uniqueKey = `${animEpoch}-${item.href}-${index}`;
 
         let hostname = "";
         try {
@@ -55,7 +62,7 @@ export default function TextResultsList({ results }: TextResultsListProps) {
             key={uniqueKey}
             variants={itemVariants}
             custom={index}
-            initial={shouldAnimate ? "hidden" : "visible"}
+            initial={animEpoch > 0 ? "hidden" : "visible"}
             animate="visible"
             className="group flex flex-col gap-3 bg-zinc-100 border border-zinc-100/40 rounded-3xl px-5 py-[16px] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,0,0,0.05)] hover:border-zinc-200 relative z-0 hover:z-10"
           >
