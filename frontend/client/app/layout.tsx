@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Providers from "./providers";
 import ReCaptchaLoader from "@/app/components/ReCaptchaLoader";
@@ -77,6 +78,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
   if (!siteKey) {
     console.warn(
@@ -90,6 +92,18 @@ export default function RootLayout({
     );
   }
 
+  if (!gaMeasurementId) {
+    console.warn(
+      "\x1b[33m%s\x1b[0m",
+      "Warning: NEXT_PUBLIC_GA_MEASUREMENT_ID is not set. Google Analytics will be disabled.",
+    );
+  } else {
+    console.log(
+      "\x1b[32m%s\x1b[0m",
+      "Google Analytics measurement ID loaded. Analytics is enabled.",
+    );
+  }
+
   return (
     <html lang="en">
       <body className={`${geist.variable} antialiased`}>
@@ -97,6 +111,22 @@ export default function RootLayout({
           {siteKey && <ReCaptchaLoader siteKey={siteKey} />}
           {children}
         </Providers>
+        {gaMeasurementId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaMeasurementId}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
