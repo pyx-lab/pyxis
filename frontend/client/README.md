@@ -10,6 +10,8 @@ Next.js frontend for Pyxis. Provides a fast, responsive UI for text, image, vide
 - **Related searches** – keyword chips linking to related queries
 - **Animated UI** – smooth transitions via Framer Motion
 - **API proxying** – `/api/*` requests are proxied to the backend in both development and production
+- **Google Analytics** – optional visitor analytics via a Measurement ID; leave the env var empty to disable entirely
+- **reCAPTCHA v3** – optional bot protection running invisibly in the background; leave the env vars empty to disable
 
 ## Technology Stack
 
@@ -44,6 +46,9 @@ cp env.example .env
 |----------|---------|-------------|
 | `NEXT_PUBLIC_URL_BACKEND_API` | `http://localhost:5000` | Backend API URL (used by server-side fetch) |
 | `NEXT_PUBLIC_URL_FRONTEND` | `http://localhost:3000` | Frontend public URL (for canonical/OG meta tags) |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | _(empty)_ | Google Analytics Measurement ID; leave empty to disable |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | _(empty)_ | reCAPTCHA v3 site key; leave empty to disable |
+| `RECAPTCHA_SECRET_KEY` | _(empty)_ | reCAPTCHA v3 secret key used for server-side token verification; leave empty to disable |
 
 > `NEXT_PUBLIC_` variables are embedded in the browser bundle at build time. A rebuild is required after changing them.
 
@@ -152,3 +157,4 @@ app/
 - **API 404 in development** – check that `next.config.ts` rewrites `/api/*` to the correct backend host/port.
 - **Dev origin errors** – if accessing from a custom domain, add it to `allowedDevOrigins` in `next.config.ts`.
 - **Images not loading** – `next.config.ts` allows all HTTPS hostnames; HTTP image sources are not optimised by Next.js.
+- **reCAPTCHA not triggering** – verify both `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` are set and the domain is registered in the Google reCAPTCHA console.

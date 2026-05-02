@@ -12,7 +12,7 @@
 - **Instant answers** – Concise factual answers with an optional related image (Wikipedia/Wikimedia Commons).
 - **Autocomplete** – Real-time query suggestions from a local CSV-based engine using English word frequency data.
 - **Content filtering** – Blocked domains and keywords loaded from CSV files; safe-image extension enforcement.
-- **Privacy first** – No user tracking; all requests are proxied server-side with safe search enabled by default.
+- **Privacy first** – No user tracking; all requests are proxied server-side with safe search enabled by default. Bot protection via Google reCAPTCHA v3; Pyxis itself sets zero cookies.
 - **Redis caching** – Per-type TTLs reduce latency and external API calls.
 - **Modern frontend** – Next.js (App Router), TypeScript, Tailwind CSS v4, Framer Motion, and SWR.
 - **PM2 ready** – Ecosystem configs for both backend and frontend ensure high availability in production.
@@ -121,7 +121,7 @@ npm install
 cp env.example .env
 ```
 
-Edit `.env` and set `NEXT_PUBLIC_URL_BACKEND_API` to your backend URL if it is not `http://localhost:5000`.
+Edit `.env` and set `NEXT_PUBLIC_URL_BACKEND_API` to your backend URL if it is not `http://localhost:5000`. Optionally set `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics and `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` / `RECAPTCHA_SECRET_KEY` for reCAPTCHA v3 bot protection (leave empty to disable either).
 
 ```bash
 # Development
@@ -235,7 +235,7 @@ GET /instant?q=elon+musk
 
 Pyxis relies on these open-source projects:
 
-- **[ddgs](https://github.com/deedy5/ddgs)** – DDGS | Dux Distributed Global Search. A metasearch library that aggregates results from diverse web search services. MIT License. Copyright (c) 2024 deedy5.
+- **[ddgs](https://github.com/deedy5/ddgs)** – DDGS | Dux Distributed Global Search. A metasearch library that aggregates results from diverse web search services. MIT License. Copyright (c) deedy5.
 - **English Word Frequency Dataset** – derived from the [Google Web Trillion Word Corpus](https://catalog.ldc.upenn.edu/LDC2006T13) (Thorsten Brants and Alex Franz), processed by Peter Norvig ([norvig.com/ngrams](https://norvig.com/ngrams/)). Used for autocomplete ranking.
 
 ---
