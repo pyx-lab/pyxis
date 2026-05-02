@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { motion } from "framer-motion";
 import type { ImageSearchResultItem } from "../../types";
 
 const EAGER_LOAD_COUNT = 5;
@@ -19,18 +19,9 @@ export default function ImageResultsList({
   selectedIndex,
   onSelect,
 }: ImageResultsListProps) {
-  const isOpen = selectedIndex !== null;
   const [numCols, setNumCols] = useState(5);
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const prevSelectedIndex = useRef<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 1024);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   useEffect(() => {
     const update = () => {
