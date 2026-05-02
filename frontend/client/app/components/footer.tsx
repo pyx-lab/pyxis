@@ -21,14 +21,6 @@ export default function Footer() {
       <Link href="/terms" className="text-xs text-gray-400 hover:text-gray-700">
         Terms
       </Link>
-      <a
-        href="https://www.gnu.org/licenses/gpl-3.0.html"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-gray-400 hover:text-gray-700"
-      >
-        GPL-3.0
-      </a>
     </footer>
   );
 }
