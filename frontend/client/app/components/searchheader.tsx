@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { getRecaptchaToken } from "@/lib/recaptcha";
 
 export interface RichSuggestion {
   title: string;
@@ -176,14 +177,19 @@ function SearchHeaderContent() {
     };
   }, [setShowSuggestions]);
 
-  const handleSearch = (e?: React.FormEvent, overrideQuery?: string) => {
+  const handleSearch = async (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
     const q = overrideQuery || query;
     if (q.trim()) {
       setIsLoading(true);
       setShowSuggestions(false);
       setMobileSearchActive(false);
-      router.push(`/search/${activeTab}?q=${encodeURIComponent(q)}`);
+
+      const token = await getRecaptchaToken();
+      const params = new URLSearchParams({ q });
+      if (token) params.append("g-recaptcha-response", token);
+      router.push(`/search/${activeTab}?${params.toString()}`);
+
       if (q === urlQuery) setTimeout(() => setIsLoading(false), 800);
     }
   };
