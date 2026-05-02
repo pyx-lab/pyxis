@@ -381,6 +381,8 @@ function SearchHeaderContent() {
                   readOnly
                   value={ghostText}
                   aria-hidden="true"
+                  id="search-ghost-input"
+                  name="ghost"
                   className="absolute inset-0 w-full h-12 pl-[84px] md:pl-6 pr-12 rounded-full border border-transparent bg-transparent text-[15px] text-zinc-400 pointer-events-none z-0"
                 />
 
@@ -608,6 +610,8 @@ function SearchHeaderContent() {
               <form onSubmit={handleSearch} className="w-full">
                 <input
                   ref={mobileInputRef}
+                  id="mobile-search-input"
+                  name="q"
                   type="text"
                   value={query}
                   onChange={(e) => {
