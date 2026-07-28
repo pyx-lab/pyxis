@@ -75,68 +75,20 @@ export default function PrivacyPage() {
               Pyxis does not store your search queries, IP addresses, browser
               fingerprints, or any other identifier. There is no database of
               "who searched for what". The only thing that persists across
-              requests is the in-memory cache for autocomplete suggestions
+              requests is the in-memory Redis cache for search results
               (which contains no user data).
             </p>
           </div>
 
           <div>
             <h2 className="text-base font-semibold text-gray-900 mb-2">
-              Google Analytics - what we actually collect
+              No third-party trackers
             </h2>
             <p>
-              We use Google Analytics to understand general usage patterns: how
-              many people visit, which pages are popular, and what countries
-              they come from (aggregated, not per-user). Google Analytics
-              collects data through a JavaScript snippet that runs in your
-              browser.
-            </p>
-            <p className="mt-2">
-              <strong>We do not set or read any cookies ourselves.</strong>{" "}
-              Google Analytics may set its own first-party cookies for its
-              measurement (e.g., to distinguish unique users). Pyxis has no
-              access to those cookie values - we only see the final, anonymised
-              reports inside Google's dashboard. You can block Google Analytics
-              cookies entirely by using a browser extension or by disabling
-              JavaScript; the search engine itself will still work perfectly.
-            </p>
-            <p className="mt-2">
-              All GA data is subject to the{" "}
-              <a
-                href="https://policies.google.com/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-gray-900"
-              >
-                Google Privacy Policy
-              </a>
-              .
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">
-              Google reCAPTCHA v3
-            </h2>
-            <p>
-              To block automated bots, we use reCAPTCHA v3. It runs in the
-              background and collects hardware, browser, and interaction data
-              (including IP address). Those requests go directly from your
-              browser to Google - they are not proxied through our server. The
-              collected data is governed by Google's policies. Pyxis does not
-              receive or store any of that data, only a score indicating whether
-              you are likely a human.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">
-              No other third-party trackers
-            </h2>
-            <p>
-              We do not embed ad networks, social media pixels, or any other
-              tracking scripts. The only external scripts are Google Analytics
-              and Google reCAPTCHA - both disclosed above.
+              Pyxis embeds zero tracking scripts, no analytics, no ad networks,
+              and no social media pixels. No cookies of any kind are set by
+              Pyxis. Every external request is proxied server-side so no
+              third party ever sees your browser or IP address.
             </p>
           </div>
 
@@ -155,9 +107,8 @@ export default function PrivacyPage() {
                 GNU General Public License v3.0
               </a>
               . You can inspect the code, build your own image, and run an
-              instance that has no external dependencies (just remove the API
-              keys for reCAPTCHA and GA). We encourage self-hosting as the
-              ultimate privacy solution.
+              instance that runs entirely on your own hardware. We encourage
+              self-hosting as the ultimate privacy solution.
             </p>
           </div>
 

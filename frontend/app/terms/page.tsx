@@ -6,7 +6,7 @@ import Footer from "../components/footer";
 export const metadata: Metadata = {
   title: "Terms",
   description:
-    "Terms of use for Pyxis, an open-source, self-hosted search engine by PyxLab. Includes note about analytics and reCAPTCHA.",
+    "Terms of use for Pyxis, an open-source, self-hosted search engine by PyxLab.",
 };
 
 export default function TermsPage() {
@@ -65,38 +65,17 @@ export default function TermsPage() {
 
           <div>
             <h2 className="text-base font-semibold text-gray-900 mb-2">
-              Analytics and reCAPTCHA
+              Privacy
             </h2>
             <p>
-              To understand general usage and to protect the service from abuse,
-              we use Google Analytics and Google reCAPTCHA v3. These services
-              collect anonymised data as described in our{" "}
+              Pyxis sets no cookies and embeds no third-party tracking. Read our{" "}
               <Link
                 href="/privacy"
                 className="underline underline-offset-2 hover:text-gray-900 transition-colors"
               >
                 Privacy Policy
-              </Link>
-              . By using Pyxis, you agree to the processing of your data by
-              Google as described in the{" "}
-              <a
-                href="https://policies.google.com/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-gray-900 transition-colors"
-              >
-                Google Privacy Policy
-              </a>{" "}
-              and{" "}
-              <a
-                href="https://policies.google.com/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-gray-900 transition-colors"
-              >
-                Google Terms of Service
-              </a>
-              .
+              </Link>{" "}
+              for the full details on IP masking and data handling.
             </p>
           </div>
 
@@ -108,8 +87,7 @@ export default function TermsPage() {
               This is a small, community-maintained project running on limited
               resources. Please do not use automated scripts to hammer the
               search endpoint, attempt to exploit vulnerabilities, or do
-              anything that would make it harder for others to use. reCAPTCHA
-              helps us block bots, but we also ask for basic decency.
+              anything that would make it harder for others to use.
             </p>
           </div>
 

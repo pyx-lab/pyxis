@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAutocomplete } from "./searchheader";
-import { getRecaptchaToken } from "@/lib/recaptcha";
 
 interface HomeSearchBarProps {
   searchMode?: string;
@@ -117,10 +116,7 @@ export default function HomeSearchBar({
       setShowSuggestions(false);
       setMobileSearchActive(false);
 
-      const token = await getRecaptchaToken();
-      const params = new URLSearchParams({ q });
-      if (token) params.append("g-recaptcha-response", token);
-      router.push(`/search/${searchMode}?${params.toString()}`);
+      router.push(`/search/${searchMode}?q=${encodeURIComponent(q)}`);
     }
   };
 
@@ -258,6 +254,32 @@ export default function HomeSearchBar({
                           </div>
                         </div>
                       ))}
+                      {query.trim().length > 0 && (
+                        <div
+                          onClick={() => {
+                            setQuery(query.trim());
+                            handleSearch(undefined, query.trim());
+                          }}
+                          className="px-6 py-2.5 hover:bg-gray-50 cursor-pointer flex items-center gap-3"
+                        >
+                          <svg
+                            className="w-4 h-4 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                          <span className="text-black text-sm font-semibold">
+                            {query.trim()}
+                          </span>
+                        </div>
+                      )}
                       {suggestions.map((s, i) => (
                         <div
                           key={i}
@@ -405,8 +427,34 @@ export default function HomeSearchBar({
                 </div>
               </div>
             ))}
-            {richSuggestions.length > 0 && suggestions.length > 0 && (
+            {richSuggestions.length > 0 && (
               <div className="h-px bg-gray-100 my-2 mx-4" />
+            )}
+            {query.trim().length > 0 && (
+              <div
+                onClick={() => {
+                  setQuery(query.trim());
+                  handleSearch(undefined, query.trim());
+                }}
+                className="px-4 py-3 flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <span className="text-gray-800 text-[15px] flex-1 font-medium">
+                  {query.trim()}
+                </span>
+              </div>
             )}
             {suggestions.map((s, i) => (
               <div

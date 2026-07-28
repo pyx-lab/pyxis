@@ -5,7 +5,6 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { getRecaptchaToken } from "@/lib/recaptcha";
 
 export interface RichSuggestion {
   title: string;
@@ -185,10 +184,7 @@ function SearchHeaderContent() {
       setShowSuggestions(false);
       setMobileSearchActive(false);
 
-      const token = await getRecaptchaToken();
-      const params = new URLSearchParams({ q });
-      if (token) params.append("g-recaptcha-response", token);
-      router.push(`/search/${activeTab}?${params.toString()}`);
+      router.push(`/search/${activeTab}?q=${encodeURIComponent(q)}`);
 
       if (q === urlQuery) setTimeout(() => setIsLoading(false), 800);
     }
@@ -197,10 +193,7 @@ function SearchHeaderContent() {
   const handleTabChange = async (tabPath: string, isActive: boolean) => {
     if (!query.trim() || isActive) return;
     setIsLoading(true);
-    const token = await getRecaptchaToken();
-    const params = new URLSearchParams({ q: query });
-    if (token) params.append("g-recaptcha-response", token);
-    router.push(`/search/${tabPath}?${params.toString()}`);
+    router.push(`/search/${tabPath}?q=${encodeURIComponent(query)}`);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -359,7 +352,7 @@ function SearchHeaderContent() {
           <div className="flex pb-4 md:pb-5">
             <div
               ref={containerRef}
-              className="w-full md:max-w-[680px] relative md:mt-0 md:ml-[110px] lg:ml-0 transition-all"
+              className="w-full md:max-w-[680px] relative md:mt-0 md:ml-[110px] transition-all"
             >
               <form onSubmit={handleSearch} className="relative w-full group">
                 <Link
@@ -432,6 +425,7 @@ function SearchHeaderContent() {
               {!isMobile && (
                 <AnimatePresence>
                   {showSuggestions &&
+                    query !== urlQuery &&
                     (suggestions.length > 0 || richSuggestions.length > 0) && (
                       <motion.div
                         initial={{ opacity: 0, y: -4, scale: 0.98 }}
@@ -485,10 +479,34 @@ function SearchHeaderContent() {
                           </div>
                         ))}
 
-                        {richSuggestions.length > 0 &&
-                          suggestions.length > 0 && (
+                        {richSuggestions.length > 0 && (
                             <div className="h-px w-full bg-zinc-100 my-1" />
                           )}
+
+                        <div
+                          onClick={() => {
+                            setQuery(query.trim());
+                            handleSearch(undefined, query.trim());
+                          }}
+                          className="px-6 py-2.5 hover:bg-zinc-50 cursor-pointer flex items-center gap-4 transition-colors"
+                        >
+                          <svg
+                            className="w-4 h-4 text-zinc-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                          <span className="text-zinc-800 text-[15px] font-semibold text-zinc-950">
+                            {query.trim()}
+                          </span>
+                        </div>
 
                         {suggestions.map((s, i) => (
                           <div
@@ -529,7 +547,7 @@ function SearchHeaderContent() {
         </div>
 
         <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8">
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0 md:ml-[110px] lg:ml-0 transition-all">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0 md:ml-[110px] transition-all">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.path;
               return (
@@ -696,8 +714,34 @@ function SearchHeaderContent() {
                 </div>
               </div>
             ))}
-            {richSuggestions.length > 0 && suggestions.length > 0 && (
+            {richSuggestions.length > 0 && (
               <div className="h-px bg-zinc-100 my-2 mx-4" />
+            )}
+            {query.trim().length > 0 && (
+              <div
+                onClick={() => {
+                  setQuery(query.trim());
+                  handleSearch(undefined, query.trim());
+                }}
+                className="px-4 py-3 flex items-center gap-3 hover:bg-zinc-50 active:bg-zinc-100 transition-colors cursor-pointer"
+              >
+                <svg
+                  className="w-5 h-5 text-zinc-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <span className="text-zinc-800 text-[15px] flex-1 font-medium">
+                  {query.trim()}
+                </span>
+              </div>
             )}
             {suggestions.map((s, i) => (
               <div

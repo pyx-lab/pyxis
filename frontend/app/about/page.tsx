@@ -6,7 +6,7 @@ import Footer from "../components/footer";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Pyxis is an open-source search engine by PyxLab. Your IP is masked at every proxy layer. Transparent analytics included.",
+    "Pyxis is an open-source search engine by PyxLab. Your IP is masked at every proxy layer. Zero tracking, zero cookies.",
 };
 
 export default function AboutPage() {
@@ -81,29 +81,19 @@ export default function AboutPage() {
 
           <div>
             <h2 className="text-base font-semibold text-gray-900 mb-2">
-              Analytics and cookies - straight talk
+              No tracking, no cookies
             </h2>
             <p>
-              We use Google Analytics to count visitors.{" "}
-              <strong>Pyxis itself sets zero cookies.</strong> Google Analytics
-              may set its own first-party cookies as part of its standard
-              tracking - those cookies are managed by Google, and we cannot read
-              or access them. We only see the aggregated reports in the GA
-              dashboard.
+              <strong>Pyxis sets zero cookies and embeds zero tracking
+              scripts.</strong> There is no analytics, no ad networks,
+              and no social media pixels. No external scripts are loaded.
+              That is it.
             </p>
-            <p className="mt-2">If you prefer not to be counted, you can:</p>
-            <ul className="list-disc pl-5 mt-1">
-              <li>
-                Use a browser extension that blocks GA (e.g., uBlock Origin).
-              </li>
-              <li>Disable JavaScript (the search form still works).</li>
-              <li>Run your own instance - the code is open source.</li>
-            </ul>
           </div>
 
           <div>
             <h2 className="text-base font-semibold text-gray-900 mb-2">
-              Why no "real" tracking?
+              Why no tracking?
             </h2>
             <p>
               Pyxis is not a business. It is a project by{" "}
@@ -111,9 +101,8 @@ export default function AboutPage() {
                 PyxLab
               </Link>
               , a small independent lab. We have no investors, no ad network,
-              and no reason to collect your data. The only "data" we look at is
-              how many people use the site (so we know if the server needs an
-              upgrade).
+              and no reason to collect your data. The only metric we care about
+              is whether the search results are good.
             </p>
           </div>
 
