@@ -12,7 +12,7 @@
 - **Instant answers** – Concise factual answers with an optional related image (Wikipedia/Wikimedia Commons).
 - **Autocomplete** – Real-time query suggestions from a local CSV-based engine using English word frequency data.
 - **Content filtering** – Blocked domains and keywords loaded from CSV files; safe-image extension enforcement.
-- **Privacy first** – No user tracking; all requests are proxied server-side with safe search enabled by default. Bot protection via Google reCAPTCHA v3; Pyxis itself sets zero cookies.
+- **Privacy first** – No user tracking; all requests are proxied server-side with safe search enabled by default. Pyxis itself sets zero cookies and embeds no tracking scripts.
 - **Redis caching** – Per-type TTLs reduce latency and external API calls.
 - **Modern frontend** – Next.js (App Router), TypeScript, Tailwind CSS v4, Framer Motion, and SWR.
 - **PM2 ready** – Ecosystem configs for both backend and frontend ensure high availability in production.
@@ -57,7 +57,7 @@ cd pyxis
 ## Backend Setup
 
 ```bash
-cd backend/python
+cd backend
 ```
 
 **Create a virtual environment:**
@@ -99,16 +99,13 @@ cp env.example .env
 # Edit .env -- at minimum check REDIS_URL
 ```
 
-**Prepare datasets** – place CSV files in `autocomplete/dataset/` and `filters/` (see [backend README](backend/python/README.md)).
+**Prepare datasets** – place CSV files in `autocomplete/dataset/` and `filters/` (see [backend README](backend/README.md)).
 
 **Run:**
 
 ```bash
 # Development
 python app.py
-
-# Production (PM2 recommended)
-pm2 start ecosystem.config.js
 ```
 
 ---
@@ -116,19 +113,16 @@ pm2 start ecosystem.config.js
 ## Frontend Setup
 
 ```bash
-cd frontend/client
+cd frontend
 npm install
 cp env.example .env
 ```
 
-Edit `.env` and set `NEXT_PUBLIC_URL_BACKEND_API` to your backend URL if it is not `http://localhost:5000`. Optionally set `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics and `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` / `RECAPTCHA_SECRET_KEY` for reCAPTCHA v3 bot protection (leave empty to disable either).
+Edit `.env` and set `NEXT_PUBLIC_URL_BACKEND_API` to your backend URL if it is not `http://localhost:5000`.
 
 ```bash
 # Development
 npm run dev
-
-# Production
-npm run build && npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -137,39 +131,16 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Running in Production
 
-### Backend (Flask) with PM2
+A single `ecosystem.config.js` at the repo root manages both the backend (Flask) and frontend (Next.js) processes.
 
 ```bash
-cd backend/python
+# Build the frontend
+cd frontend && npm run build && cd ..
+
+# Install PM2 globally
 sudo npm install -g pm2
-pm2 start ecosystem.config.js
-pm2 save && pm2 startup
-```
 
-### Frontend (Next.js) with PM2
-
-```bash
-cd frontend/client
-npm run build
-```
-
-Create `ecosystem.config.js` (example):
-
-```javascript
-module.exports = {
-  apps: [
-    {
-      name: "pyxis-frontend",
-      cwd: "/path/to/frontend/client",
-      script: "node_modules/.bin/next",
-      args: "start",
-      env: { NODE_ENV: "production", PORT: 3000 },
-    },
-  ],
-};
-```
-
-```bash
+# Start both backend and frontend
 pm2 start ecosystem.config.js
 pm2 save && pm2 startup
 ```
@@ -226,8 +197,9 @@ GET /instant?q=elon+musk
 
 - **Redis connection errors** – check `redis-cli ping` and `REDIS_URL` in `.env`.
 - **Autocomplete unavailable** – verify CSV files exist in `autocomplete/dataset/`.
-- **PM2 not starting** – run `pm2 logs pyxis-flask-backend` for details.
+- **PM2 not starting** – run `pm2 logs pyxis-backend` for details.
 - **Backend connection refused (frontend)** – ensure the backend is running and `NEXT_PUBLIC_URL_BACKEND_API` is set correctly.
+- **Port conflicts** – the backend port defaults to `5000`; change it by setting `PYXIS_PORT` in the PM2 config or the backend `.env`.
 
 ---
 
