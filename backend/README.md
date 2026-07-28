@@ -6,13 +6,13 @@ Flask-based REST API that powers Pyxis. Fetches search results from multiple sea
 
 - **Search endpoints** – text, images, videos, news, and books via `ddgs` (DDGS | Dux Distributed Global Search), a metasearch library that aggregates results from diverse web search services with automatic backend selection per search type:
 
-  | Type   | Available backends |
-  |--------|--------------------|
+  | Type   | Available backends                                                            |
+  | ------ | ----------------------------------------------------------------------------- |
   | text   | Bing, Brave, DuckDuckGo, Google, Grokipedia, Mojeek, Yandex, Yahoo, Wikipedia |
-  | images | Bing, DuckDuckGo |
-  | videos | DuckDuckGo |
-  | news   | Bing, DuckDuckGo, Yahoo |
-  | books  | Anna's Archive |
+  | images | Bing, DuckDuckGo                                                              |
+  | videos | DuckDuckGo                                                                    |
+  | news   | Bing, DuckDuckGo, Yahoo                                                       |
+  | books  | Anna's Archive                                                                |
 
 - **Autocomplete** – local CSV-based suggestion engine with English word frequency ranking
 - **Instant answers** – concise factual answers with an optional related image (Wikipedia/Wikimedia Commons)
@@ -32,7 +32,7 @@ Flask-based REST API that powers Pyxis. Fetches search results from multiple sea
 
 ```bash
 git clone https://github.com/muyeed15/pyxis.git
-cd pyxis/backend/python
+cd pyxis/backend
 ```
 
 ### 2. Set up a Python environment
@@ -101,18 +101,18 @@ Edit `.env` as needed. All variables have sensible defaults; at minimum check `R
 
 **Autocomplete** – place three CSV files in `autocomplete/dataset/`:
 
-| File | Format |
-|------|--------|
+| File           | Format                        |
+| -------------- | ----------------------------- |
 | `entities.csv` | columns: `category`, `entity` |
-| `keywords.csv` | one keyword per row |
-| `patterns.csv` | columns: `type`, `pattern` |
+| `keywords.csv` | one keyword per row           |
+| `patterns.csv` | columns: `type`, `pattern`    |
 
 **Content filters** – place CSV files in `filters/`:
 
-| File | Format |
-|------|--------|
-| `blocked_keywords.csv` | one keyword per row – results containing these strings are dropped |
-| `blocked_domains.csv` | one base domain per row – results from these domains are dropped |
+| File                        | Format                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `blocked_keywords.csv`      | one keyword per row – results containing these strings are dropped                             |
+| `blocked_domains.csv`       | one base domain per row – results from these domains are dropped                               |
 | `safe_image_extensions.csv` | one extension per row (e.g. `.jpg`) – only these extensions are used for instant answer images |
 
 ## Running
@@ -123,18 +123,19 @@ Edit `.env` as needed. All variables have sensible defaults; at minimum check `R
 python app.py
 ```
 
-Server starts at `http://0.0.0.0:5000`.
+Server starts at `http://127.0.0.1:5000`.
 
 ### Production – Waitress
 
 ```bash
-waitress-serve --host=0.0.0.0 --port=5000 app:app
+waitress-serve --host=127.0.0.1 --port=5000 app:app
 ```
 
 ### Production – PM2 (recommended)
 
 ```bash
 sudo npm install -g pm2
+cd ..  # go to repo root
 pm2 start ecosystem.config.js
 pm2 save && pm2 startup
 ```
@@ -143,8 +144,8 @@ Useful PM2 commands:
 
 ```bash
 pm2 status
-pm2 logs pyxis-flask-backend
-pm2 restart pyxis-flask-backend
+pm2 logs pyxis-backend
+pm2 restart pyxis-backend
 ```
 
 ## API Endpoints
@@ -159,11 +160,11 @@ Returns endpoint documentation and module status.
 
 ### `GET /search`
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `q` | Search query | `q=python` |
-| `type` | `text` \| `images` \| `videos` \| `news` \| `books` (default `text`) | `type=images` |
-| `page` | Page number, 1-based (default `1`) | `page=2` |
+| Parameter | Description                                                          | Example       |
+| --------- | -------------------------------------------------------------------- | ------------- |
+| `q`       | Search query                                                         | `q=python`    |
+| `type`    | `text` \| `images` \| `videos` \| `news` \| `books` (default `text`) | `type=images` |
+| `page`    | Page number, 1-based (default `1`)                                   | `page=2`      |
 
 ```
 GET /search?q=artificial+intelligence&type=text&page=1
@@ -171,9 +172,9 @@ GET /search?q=artificial+intelligence&type=text&page=1
 
 ### `GET /autocomplete`
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `q` | Partial query | `q=how+to` |
+| Parameter | Description   | Example    |
+| --------- | ------------- | ---------- |
+| `q`       | Partial query | `q=how+to` |
 
 ```
 GET /autocomplete?q=how+to
@@ -181,9 +182,9 @@ GET /autocomplete?q=how+to
 
 ### `GET /instant`
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `q` | Query | `q=elon+musk` |
+| Parameter | Description | Example       |
+| --------- | ----------- | ------------- |
+| `q`       | Query       | `q=elon+musk` |
 
 ```
 GET /instant?q=elon+musk
@@ -193,34 +194,37 @@ GET /instant?q=elon+musk
 
 All variables have defaults and are optional unless noted.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `REDIS_URL` | `redis://localhost:6379/0` | Redis connection URL |
-| `MAX_RETRIES` | `5` | Max retry attempts per search request |
-| `RETRY_DELAYS` | `0.1,0.2,0.4,0.8` | Comma-separated exponential backoff delays (seconds) |
-| `TEXT_MAX_RESULTS_PER_PAGE` | `10` | Text results per page |
-| `TEXT_MAX_PAGES` | `10` | Max pages for text search |
-| `IMAGE_MAX_RESULTS_PER_PAGE` | `20` | Image results per page |
-| `IMAGE_MAX_PAGES` | `10` | Max pages for image search |
-| `VIDEO_MAX_RESULTS_PER_PAGE` | `20` | Video results per page |
-| `VIDEO_MAX_PAGES` | `10` | Max pages for video search |
-| `NEWS_MAX_RESULTS_PER_PAGE` | `10` | News results per page |
-| `NEWS_MAX_PAGES` | `10` | Max pages for news search |
-| `BOOKS_MAX_RESULTS_PER_PAGE` | `10` | Book results per page |
-| `BOOKS_MAX_PAGES` | `10` | Max pages for book search |
-| `CACHE_TIMEOUT_TEXT` | `604800` | Text cache TTL in seconds (7 days) |
-| `CACHE_TIMEOUT_IMAGE` | `259200` | Image cache TTL in seconds (3 days) |
-| `CACHE_TIMEOUT_VIDEO` | `86400` | Video cache TTL in seconds (1 day) |
-| `CACHE_TIMEOUT_NEWS` | `3600` | News cache TTL in seconds (1 hour) |
-| `CACHE_TIMEOUT_BOOKS` | `1296000` | Books cache TTL in seconds (15 days) |
-| `CACHE_TIMEOUT_AUTOCOMPLETE` | `2592000` | Autocomplete cache TTL in seconds (30 days) |
-| `CACHE_TIMEOUT_INSTANT` | `2592000` | Instant answer cache TTL in seconds (30 days) |
+| Variable                     | Default                    | Description                                          |
+| ---------------------------- | -------------------------- | ---------------------------------------------------- |
+| `PYXIS_PORT`                 | `5000`                     | Port the Flask server listens on                     |
+| `REDIS_URL`                  | `redis://localhost:6379/0` | Redis connection URL                                 |
+| `MAX_RETRIES`                | `5`                        | Max retry attempts per search request                |
+| `RETRY_DELAYS`               | `0.1,0.2,0.4,0.8`          | Comma-separated exponential backoff delays (seconds) |
+| `TEXT_MAX_RESULTS_PER_PAGE`  | `10`                       | Text results per page                                |
+| `TEXT_MAX_PAGES`             | `10`                       | Max pages for text search                            |
+| `IMAGE_MAX_RESULTS_PER_PAGE` | `20`                       | Image results per page                               |
+| `IMAGE_MAX_PAGES`            | `10`                       | Max pages for image search                           |
+| `VIDEO_MAX_RESULTS_PER_PAGE` | `20`                       | Video results per page                               |
+| `VIDEO_MAX_PAGES`            | `10`                       | Max pages for video search                           |
+| `NEWS_MAX_RESULTS_PER_PAGE`  | `10`                       | News results per page                                |
+| `NEWS_MAX_PAGES`             | `10`                       | Max pages for news search                            |
+| `BOOKS_MAX_RESULTS_PER_PAGE` | `10`                       | Book results per page                                |
+| `BOOKS_MAX_PAGES`            | `10`                       | Max pages for book search                            |
+| `CACHE_TIMEOUT_TEXT`         | `604800`                   | Text cache TTL in seconds (7 days)                   |
+| `CACHE_TIMEOUT_IMAGE`        | `259200`                   | Image cache TTL in seconds (3 days)                  |
+| `CACHE_TIMEOUT_VIDEO`        | `86400`                    | Video cache TTL in seconds (1 day)                   |
+| `CACHE_TIMEOUT_NEWS`         | `3600`                     | News cache TTL in seconds (1 hour)                   |
+| `CACHE_TIMEOUT_BOOKS`        | `1296000`                  | Books cache TTL in seconds (15 days)                 |
+| `CACHE_TIMEOUT_AUTOCOMPLETE` | `2592000`                  | Autocomplete cache TTL in seconds (30 days)          |
+| `CACHE_TIMEOUT_INSTANT`      | `2592000`                  | Instant answer cache TTL in seconds (30 days)        |
 
 ## Project Structure
 
 ```
-python/
+backend/
 ├── app.py                      # Main Flask application
+├── requirements.txt
+├── env.example
 ├── autocomplete/
 │   ├── autocomplete.py
 │   └── dataset/
@@ -233,8 +237,6 @@ python/
 │   └── safe_image_extensions.csv
 ├── instantsearch/
 │   └── instantsearch.py
-├── ecosystem.config.js
-├── env.example
 └── README.md
 ```
 
@@ -243,9 +245,11 @@ python/
 All search results, autocomplete suggestions, and instant answers are cached in Redis. Use these commands to clear cached data when needed.
 
 > **Important:** `redis-cli` connects to `localhost:6379 DB 0` by default. If your `REDIS_URL` in `.env` points elsewhere, commands will flush the wrong instance and appear to do nothing. Always verify first:
+>
 > ```bash
 > redis-cli --scan --pattern "pyxis_*" | head -5
 > ```
+>
 > If that returns no keys, pass your actual Redis URL explicitly: `redis-cli -u "$REDIS_URL" ...`
 
 ### Flush all Pyxis cache at once (recommended)
@@ -302,4 +306,4 @@ The cache repopulates automatically on the next request for each query. In produ
 - **Redis errors** – verify Redis is running (`redis-cli ping`) and `REDIS_URL` in `.env` is correct.
 - **Autocomplete unavailable** – check that all three CSV files exist in `autocomplete/dataset/`.
 - **Filter not working** – filter CSVs are loaded at startup; restart the server after editing them.
-- **PM2 won't start** – check `pm2 logs pyxis-flask-backend` for the error.
+- **PM2 won't start** – check `pm2 logs pyxis-backend` for the error.

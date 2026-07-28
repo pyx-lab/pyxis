@@ -493,4 +493,6 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
+    port = int(os.getenv("PYXIS_PORT", 5000))
+    debug = os.getenv("NODE_ENV") != "production"
+    app.run(host="127.0.0.1", port=port, debug=debug, threaded=True)
